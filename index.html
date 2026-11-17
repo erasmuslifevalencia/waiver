@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Erasmus Life · Waiver</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>Erasmus Life · <span id="trip">Morocco Trip</span></h1>
+  <div class="sub"><span id="dates"></span> · Liability waiver / Descargo de responsabilidad</div>
+
+  <div class="card" id="s1">
+    <label for="q">Type your name · Escribe tu nombre</label>
+    <input type="text" id="q" autocomplete="off" placeholder="e.g. Maria Karl…">
+    <div class="res hidden" id="res"></div>
+    <div class="err" id="e1"></div>
+  </div>
+
+  <div class="card hidden" id="s2">
+    <div><b id="who"></b></div>
+    <label for="dg">Last <span class="nd">3</span> digits of your WhatsApp number · Últimas <span class="nd">3</span> cifras de tu número de WhatsApp</label>
+    <input type="tel" id="dg" inputmode="numeric" maxlength="3" placeholder="123">
+    <div class="err" id="e2"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="sec" onclick="restart()">← Back</button>
+      <button id="vb" onclick="verify()">Continue · Continuar</button>
+    </div>
+  </div>
+
+  <div class="hidden" id="s3">
+    <div class="card">
+      <div class="row"><b id="who3"></b><span id="badge" class="badge"></span></div>
+      <div style="height:10px"></div>
+      <div class="lang"><button id="len" onclick="setLang('en')">English</button><button id="les" class="sec" onclick="setLang('es')">Español</button></div>
+      <div class="text" id="txt"></div>
+    </div>
+    <div class="card">
+      <label for="fn">Full name (as on passport) · Nombre completo (como en el pasaporte)</label>
+      <input type="text" id="fn" autocomplete="name">
+      <label for="dob">Date of birth · Fecha de nacimiento</label>
+      <input type="date" id="dob">
+      <label for="pp">Passport number · Número de pasaporte</label>
+      <input type="text" id="pp" autocapitalize="characters" autocomplete="off">
+      <label>Signature · Firma</label>
+      <canvas id="sig"></canvas>
+      <div class="row" style="margin-top:6px"><span style="font-size:13px;color:#666">Sign with your finger · Firma con el dedo</span>
+        <button class="sec" style="padding:6px 10px;font-size:13px" onclick="initSig()">Clear · Borrar</button></div>
+      <label class="chk"><input type="checkbox" id="acc"><span id="acctxt"></span></label>
+      <div class="err" id="e3"></div>
+      <button id="sb" style="width:100%;margin-top:6px" onclick="submitW()">Sign · Firmar</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="s4">
+    <h1>✅ Thank you! · ¡Gracias!</h1>
+    <p>Your waiver has been signed and saved. You can close this page.<br>Tu descargo ha sido firmado y guardado. Puedes cerrar esta página.</p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  let ENR = null, TOKEN = null, TEXTS = null, LANG = 'en', drawn = 0, timer = null, seq = 0;
+  const MSG = {
+    blocked: 'Too many attempts – try again in 15 min or ask the staff. · Demasiados intentos – inténtalo en 15 min o pregunta al staff.',
+    digits: 'Digits do not match. · Las cifras no coinciden.',
+    already: 'This waiver is already signed. · Este descargo ya está firmado.',
+    notfound: 'Name not found – ask the staff. · Nombre no encontrado – pregunta al staff.',
+    closed: 'Signing is closed. · La firma está cerrada.',
+    expired: 'Session expired, please start again. · Sesión caducada, vuelve a empezar.',
+    accept: 'Please tick the box. · Marca la casilla.',
+    fullName: 'Please type your full name. · Escribe tu nombre completo.',
+    dob: 'Please enter your date of birth. · Indica tu fecha de nacimiento.',
+    passport: 'Please enter your passport number. · Indica tu número de pasaporte.',
+    signature: 'Please sign in the box. · Firma en el recuadro.',
+    network: 'Connection problem, please try again. · Problema de conexión, inténtalo de nuevo.',
+  };
+  const show = id => { ['s1','s2','s3','s4'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); };
+
+  api('config').then(c => {
+    $('trip').textContent = c.trip; $('dates').textContent = c.dates;
+    document.querySelectorAll('.nd').forEach(e => e.textContent = c.digits);
+    $('dg').maxLength = c.digits;
+    if (!c.open) $('e1').textContent = MSG.closed;
+  }).catch(() => {});
+
+  $('q').addEventListener('input', () => {
+    clearTimeout(timer); const q = $('q').value; $('e1').textContent = '';
+    if (q.trim().length < 3) { $('res').classList.add('hidden'); return; }
+    timer = setTimeout(async () => {
+      const my = ++seq;
+      try {
+        const r = await api('search', { q });
+        if (my !== seq) return;
+        if (r.closed) { $('e1').textContent = MSG.closed; return; }
+        const box = $('res'); box.classList.remove('hidden');
+        box.innerHTML = r.results.length ? r.results.map(p => p.signed
+          ? `<div class="done">${esc(p.name)} – ✓ signed</div>`
+          : `<div data-enr="${esc(p.enr)}" data-n="${esc(p.name)}">${esc(p.name)}</div>`).join('')
+          : '<div class="done">No result – try your first or last name only · Sin resultado</div>';
+        box.querySelectorAll('div[data-enr]').forEach(d => d.onclick = () => pick(d.dataset.enr, d.dataset.n));
+      } catch (e) { $('e1').textContent = MSG.network; }
+    }, 350);
+  });
+
+  function pick(enr, name) { ENR = enr; $('who').textContent = name; $('dg').value = ''; $('e2').textContent = ''; show('s2'); $('dg').focus(); }
+  function restart() { ENR = null; TOKEN = null; $('q').value = ''; $('res').classList.add('hidden'); show('s1'); }
+
+  async function verify() {
+    $('vb').disabled = true; $('e2').textContent = '';
+    try {
+      const r = await api('verify', { enr: ENR, digits: $('dg').value });
+      if (!r.ok) { $('e2').textContent = (MSG[r.error] || r.error) + (r.error === 'digits' && r.left >= 0 ? ` (${r.left} left)` : ''); return; }
+      TOKEN = r.token; TEXTS = r.texts;
+      $('who3').textContent = r.name;
+      $('badge').className = 'badge ' + (r.version === 'CON' ? 'con' : 'sin');
+      $('badge').textContent = r.version === 'CON' ? 'With insurance · Con seguro' : 'No insurance · Sin seguro';
+      setLang('en'); show('s3'); setTimeout(initSig, 50);
+    } catch (e) { $('e2').textContent = MSG.network; }
+    finally { $('vb').disabled = false; }
+  }
+
+  function setLang(l) {
+    LANG = l; const t = TEXTS[l];
+    $('txt').innerHTML = '<h3>' + esc(t.title) + '</h3>' + t.paragraphs.map(p => '<p>' + esc(p) + '</p>').join('');
+    $('len').className = l === 'en' ? '' : 'sec'; $('les').className = l === 'es' ? '' : 'sec';
+    $('acctxt').textContent = l === 'en' ? 'I have read and accept this declaration.' : 'He leído y acepto esta declaración.';
+  }
+
+  let ctx, drawing = false;
+  function initSig() {
+    const c = $('sig'), r = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = c.clientWidth * r; c.height = c.clientHeight * r;
+    ctx = c.getContext('2d'); ctx.scale(r, r);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111'; drawn = 0;
+    const pos = e => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+    c.onpointerdown = e => { drawing = true; c.setPointerCapture(e.pointerId); const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
+    c.onpointermove = e => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); drawn++; };
+    c.onpointerup = c.onpointercancel = () => { drawing = false; };
+  }
+
+  async function submitW() {
+    $('e3').textContent = '';
+    if (drawn < 15) { $('e3').textContent = MSG.signature; return; }
+    const form = { fullName: $('fn').value, dob: $('dob').value, passport: $('pp').value, accept: $('acc').checked,
+      lang: LANG, signature: $('sig').toDataURL('image/png') };
+    $('sb').disabled = true; $('sb').textContent = '…';
+    try {
+      const r = await api('submit', { token: TOKEN, form });
+      if (r.ok) { show('s4'); return; }
+      $('e3').textContent = MSG[r.error] || r.error;
+      if (r.error === 'expired' || r.error === 'already') setTimeout(restart, 2500);
+    } catch (e) { $('e3').textContent = MSG.network; }
+    finally { $('sb').disabled = false; $('sb').textContent = 'Sign · Firmar'; }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Waivers · Team view</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap wide">
+  <h1>Waivers · Team view</h1>
+  <div class="sub">Open with <code>admin.html#YOUR_KEY</code> (the key after # is never sent to GitHub)</div>
+  <div class="card hidden" id="login">
+    <label for="k">Admin key</label>
+    <input type="password" id="k">
+    <button style="margin-top:10px" onclick="useKey($('k').value)">Open</button>
+    <div class="err" id="le"></div>
+  </div>
+  <div id="main" class="hidden">
+    <div class="row" style="margin-bottom:12px;flex-wrap:wrap">
+      <input type="text" id="af" placeholder="Filter by name…" style="max-width:280px">
+      <select id="as" style="max-width:200px">
+        <option value="">All</option><option>NOT SIGNED</option><option>SIGNED</option><option value="RE-SIGN">RE-SIGN</option>
+      </select>
+      <button onclick="load()">Refresh</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div style="overflow:auto"><table><thead><tr>
+      <th>#</th><th>Name</th><th>Insurance now</th><th>Status</th><th>Signed at</th><th>Phone check</th><th>PDF</th><th></th>
+    </tr></thead><tbody id="atb"></tbody></table></div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  let KEY = '', ROWS = [];
+  function useKey(k) { KEY = (k || '').trim(); load(); }
+  async function load() {
+    try {
+      const r = await api('adminList', { key: KEY });
+      if (r.error) throw new Error(r.error);
+      ROWS = r.rows; $('login').classList.add('hidden'); $('main').classList.remove('hidden'); render();
+    } catch (e) { $('main').classList.add('hidden'); $('login').classList.remove('hidden'); $('le').textContent = KEY ? 'Wrong key or server error.' : ''; }
+  }
+  function render() {
+    const f = $('af').value.toLowerCase(), s = $('as').value;
+    const n = st => ROWS.filter(r => r.status.indexOf(st) === 0).length;
+    $('stats').innerHTML =
+      `<div class="stat"><b>${ROWS.length}</b>participants</div><div class="stat"><b class="s-ok">${n('SIGNED')}</b>signed</div>` +
+      `<div class="stat"><b class="s-no">${n('NOT SIGNED')}</b>not signed</div><div class="stat"><b class="s-warn">${n('RE-SIGN')}</b>to re-sign</div>` +
+      `<div class="stat"><b>${ROWS.filter(r => !r.hasPhone).length}</b>no phone on file</div>`;
+    const list = ROWS.filter(r => (!f || r.name.toLowerCase().includes(f)) && (!s || r.status.indexOf(s) === 0));
+    $('atb').innerHTML = list.map(r => {
+      const cls = r.status === 'SIGNED' ? 's-ok' : r.status === 'NOT SIGNED' ? 's-no' : 's-warn';
+      return `<tr><td>${esc(r.enr)}</td><td>${esc(r.name)}</td><td>${r.version === 'CON' ? esc(r.insurances) : '—'}</td>` +
+        `<td class="${cls}">${esc(r.status)}</td><td>${esc(r.signedAt)}</td><td>${r.signedAt ? esc(r.verified) : (r.hasPhone ? '' : 'no phone')}</td>` +
+        `<td>${r.pdf ? `<a href="${esc(r.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}</td>` +
+        `<td>${r.signedAt ? `<button class="sec" style="padding:5px 9px;font-size:12px" data-enr="${esc(r.enr)}" data-n="${esc(r.name)}">Reset</button>` : ''}</td></tr>`;
+    }).join('') || '<tr><td colspan="8">No result</td></tr>';
+    $('atb').querySelectorAll('button[data-enr]').forEach(b => b.onclick = () => reset(b.dataset.enr, b.dataset.n));
+  }
+  async function reset(enr, name) {
+    if (!confirm('Cancel the signature of ' + name + '? They will be able to sign again.')) return;
+    try { await api('adminReset', { key: KEY, enr }); load(); } catch (e) { alert('Error'); }
+  }
+  $('af').oninput = render; $('as').onchange = render;
+  useKey(decodeURIComponent(location.hash.slice(1)));
+</script>
+</body>
+</html>
