@@ -36,10 +36,7 @@ const CONFIG = {
   OVERRIDES: {},
 
   // Fake participants to try the flow (verification digits = 123). Empty this list before going live.
-  TEST_PARTICIPANTS: [
-    { enr: 'T1', name: 'Test Erasmus Seguro', insurances: ['Basic'], phone: '+34600000123' },
-    { enr: 'T2', name: 'Test Erasmus Sin Seguro', insurances: [], phone: '+34600000123' },
-  ],
+  TEST_PARTICIPANTS: [],
 
   PHONE_DIGITS: 3,       // digits asked for verification
   MAX_ATTEMPTS: 5,       // wrong attempts per participant before a 15 min block
