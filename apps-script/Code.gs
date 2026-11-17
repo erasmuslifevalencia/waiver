@@ -35,6 +35,12 @@ const CONFIG = {
   // Keep real values ONLY in the private Apps Script project (this repo is public): { '36': { name: '…', phone: '+…' } }
   OVERRIDES: {},
 
+  // Fake participants to try the flow (verification digits = 123). Empty this list before going live.
+  TEST_PARTICIPANTS: [
+    { enr: 'T1', name: 'Test Erasmus Seguro', insurances: ['Basic'], phone: '+34600000123' },
+    { enr: 'T2', name: 'Test Erasmus Sin Seguro', insurances: [], phone: '+34600000123' },
+  ],
+
   PHONE_DIGITS: 3,       // digits asked for verification
   MAX_ATTEMPTS: 5,       // wrong attempts per participant before a 15 min block
   SIGNING_OPEN: true,    // set false to close the link
@@ -235,7 +241,8 @@ function getParticipants_(fresh) {
   }
   const sh = SpreadsheetApp.openById(CONFIG.OPTIONS_SHEET_ID).getSheetByName(CONFIG.OPTIONS_TAB);
   const values = sh.getDataRange().getDisplayValues();
-  const list = applyOverrides_(parseParticipants_(values, CONFIG.OPTIONS_HEADER_ROW, CONFIG.INSURANCE_COLUMNS), CONFIG.OVERRIDES);
+  const list = applyOverrides_(parseParticipants_(values, CONFIG.OPTIONS_HEADER_ROW, CONFIG.INSURANCE_COLUMNS), CONFIG.OVERRIDES)
+    .concat(CONFIG.TEST_PARTICIPANTS || []);
   cache.put('participants', JSON.stringify(list), 120);
   return list;
 }
