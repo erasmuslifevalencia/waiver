@@ -26,6 +26,7 @@ const CONFIG = {
 
   // Legal identity shown in the waiver
   ORGANIZER: 'HOLA TRIP (agencia de viajes CV-m20-22V), marca de HOME TRIP & SERVICES S.L., CIF B98890767',
+  ORGANIZER_EN: 'HOLA TRIP (travel agency CV-m20-22V), a brand of HOME TRIP & SERVICES S.L., CIF B98890767',
   BRAND: 'Erasmus Life',
   INSURER: 'INNOVAC',
   PRIVACY_EMAIL: 'vlc.erasmuslife@gmail.com', // ← check: contact for data-protection requests

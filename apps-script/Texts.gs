@@ -55,7 +55,7 @@ function waiverText_(version, lang, insurances) {
 
   const p = [
     'I, the participant identified in this document, registered for the "' + C.TRIP_EN + '" (' + C.TRIP_DATES +
-      '), organised by ' + C.ORGANIZER + ', under the trade name ' + C.BRAND + ' (the "Organiser"), declare the following:',
+      '), organised by ' + C.ORGANIZER_EN + ', under the trade name ' + C.BRAND + ' (the "Organiser"), declare the following:',
     '1. Risks. I have been informed that the trip includes activities with inherent risks, in particular the optional ' +
       'activities in the Merzouga desert (camel ride, 4x4 tour, quad and buggy), long road journeys and outdoor ' +
       'activities. I voluntarily accept these risks.',
