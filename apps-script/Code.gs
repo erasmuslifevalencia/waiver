@@ -31,6 +31,10 @@ const CONFIG = {
   INSURER: 'INNOVAC',
   PRIVACY_EMAIL: 'vlc.erasmuslife@gmail.com', // ← check: contact for data-protection requests
 
+  // Manual fixes when the options sheet name differs from the personal-info form (form name prevails)
+  // Keep real values ONLY in the private Apps Script project (this repo is public): { '36': { name: '…', phone: '+…' } }
+  OVERRIDES: {},
+
   PHONE_DIGITS: 3,       // digits asked for verification
   MAX_ATTEMPTS: 5,       // wrong attempts per participant before a 15 min block
   SIGNING_OPEN: true,    // set false to close the link
@@ -91,7 +95,7 @@ function setup() {
 function phoneMatchReport() {
   const parts = getParticipants_(true);
   const info = getInfoRows_();
-  const missing = parts.filter(p => !findPhone_(p.name, info));
+  const missing = parts.filter(p => !phoneFor_(p, info));
   return 'Participants: ' + parts.length + ' – without phone match: ' + missing.length +
     (missing.length ? '\n  ' + missing.map(p => '#' + p.enr + ' ' + p.name).join('\n  ') : '');
 }
@@ -128,7 +132,7 @@ function apiVerify(enr, digits) {
   if (!p) return { ok: false, error: 'notfound' };
   if (getSignedMap_()[enr]) return { ok: false, error: 'already' };
 
-  const phone = findPhone_(p.name, getInfoRows_());
+  const phone = phoneFor_(p, getInfoRows_());
   let verified = false;
   if (phone) {
     const expected = phone.replace(/\D/g, '').slice(-CONFIG.PHONE_DIGITS);
@@ -200,7 +204,7 @@ function apiAdminList(key) {
     return {
       enr: p.enr, name: p.name, version: nowVersion, insurances: p.insurances.join(' + '),
       status: status, signedAt: s ? s.at : '', verified: s ? s.verified : '',
-      pdf: s ? s.pdf : '', hasPhone: !!findPhone_(p.name, info),
+      pdf: s ? s.pdf : '', hasPhone: !!phoneFor_(p, info),
     };
   });
   return { rows: rows };
@@ -231,7 +235,7 @@ function getParticipants_(fresh) {
   }
   const sh = SpreadsheetApp.openById(CONFIG.OPTIONS_SHEET_ID).getSheetByName(CONFIG.OPTIONS_TAB);
   const values = sh.getDataRange().getDisplayValues();
-  const list = parseParticipants_(values, CONFIG.OPTIONS_HEADER_ROW, CONFIG.INSURANCE_COLUMNS);
+  const list = applyOverrides_(parseParticipants_(values, CONFIG.OPTIONS_HEADER_ROW, CONFIG.INSURANCE_COLUMNS), CONFIG.OVERRIDES);
   cache.put('participants', JSON.stringify(list), 120);
   return list;
 }
@@ -256,6 +260,19 @@ function parseParticipants_(values, headerRow, insuranceCols) {
     });
   }
   return out;
+}
+
+/** Pure function (tested): apply manual name / phone fixes by booking number. */
+function applyOverrides_(list, overrides) {
+  return list.map(p => {
+    const o = (overrides || {})[p.enr];
+    return o ? Object.assign({}, p, { name: o.name || p.name, phone: o.phone || '' }) : p;
+  });
+}
+
+/** Phone of a participant: manual override first, otherwise fuzzy match with the info form. */
+function phoneFor_(p, info) {
+  return p.phone || findPhone_(p.name, info);
 }
 
 function getInfoRows_() {
