@@ -81,7 +81,7 @@ function setup() {
   }
   const report = phoneMatchReport();
   Logger.log('Admin key: ' + props.getProperty('ADMIN_KEY'));
-  Logger.log('Admin page = https://<user>.github.io/<repo>/admin.html#' + props.getProperty('ADMIN_KEY'));
+  Logger.log('Admin page = https://erasmuslifevalencia.github.io/waiver/admin.html#' + props.getProperty('ADMIN_KEY'));
   Logger.log('PDF folder: https://drive.google.com/drive/folders/' + props.getProperty('FOLDER_ID'));
   Logger.log(report);
 }

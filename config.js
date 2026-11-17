@@ -1,5 +1,5 @@
 // URL of the Google Apps Script web app (Deploy → Web app → URL ending in /exec)
-window.API_URL = 'PASTE_APPS_SCRIPT_EXEC_URL_HERE';
+window.API_URL = 'https://script.google.com/macros/s/AKfycbztZE-n5mGzgehGT2rLoo9Dm_rDOjh57mP5z2_fAAS0Hnz6xHFwxccQbifexGkQ9MMHsA/exec';
 
 window.api = async function (action, data) {
   const res = await fetch(window.API_URL, {
