@@ -13,7 +13,7 @@ const G = {
   TRIPS: 'TRIPS', BUSES: 'BUSES', EXTRAS: 'EXTRAS', CASH: 'CASH',
   TRIPS_HDR: ['Trip ID', 'Name', 'Dates', 'Options sheet ID', 'Options tab', 'Header row', 'Option columns (comma separated)', 'Active (yes/no)', 'Local currency', 'Local currency per 1 €'],
   BUSES_HDR: ['Trip ID', 'Bus', 'Colour', 'Guide', 'PIN (4–6 digits)'],
-  EXTRAS_HDR: ['Trip ID', 'Extra', 'Price €', 'Choices (comma separated)', 'Ask for a day (yes/no)'],
+  EXTRAS_HDR: ['Trip ID', 'Extra', 'Price €', 'Choices (comma separated, own price with ":", e.g. Single:40, Double:60)', 'Ask for a day (yes/no)'],
   CASH_HDR: ['Entry ID', 'Created', 'Trip ID', 'Bus', 'Guide', 'Type', 'Traveller ID', 'Traveller', 'Extra', 'Choice', 'For day', 'Description', 'Paid to / from', 'Amount', 'Currency', 'Amount €', 'Status', 'Cancelled'],
 };
 
@@ -44,7 +44,7 @@ function setupGuides() {
   };
   tab(G.TRIPS, G.TRIPS_HDR, [
     ['MOROCCO-DEC26', 'Morocco', '4–13 Dec 2026', '1wSlxuRyMCjFyK112mm5X6F8Xpz2tiTDvU1HsY59u4k0', 'DEC2026', 3,
-      'Food pack, Mosque, 4X4, SIM card, Seguro Basic, Seguro Student, Seguro Gold', 'yes', 'MAD', 10],
+      'Food pack, Mosque, 4X4, SIM card, Seguro: Seguro Basic | Seguro Student | Seguro Gold', 'yes', 'MAD', 10],
     ['PORTUGAL-DEC26', 'Portugal', 'Dec 2026', '19nfHSwGUjru3e7JJoTIQhFU5pRcrvi8LvMcddk-YETQ', 'DEC2026', 3,
       'Castle Sao Jorge, Sintra day excursion, Pubcrawl, Boat tour', 'yes', '', ''],
   ]);
@@ -56,8 +56,7 @@ function setupGuides() {
   tab(G.EXTRAS, G.EXTRAS_HDR, [
     ['MOROCCO-DEC26', 'Desert lunch', 5, 'Chicken, Kefta, Omelette, Veggie', 'yes'],
     ['MOROCCO-DEC26', 'Todgha lunch', 12, 'Classic, Veggie', 'no'],
-    ['MOROCCO-DEC26', 'Quad single', 40, '', 'no'],
-    ['MOROCCO-DEC26', 'Quad double', 60, '', 'no'],
+    ['MOROCCO-DEC26', 'Quad', 40, 'Single:40, Double:60', 'no'],
   ]);
   tab(G.CASH, G.CASH_HDR, []);
   ['Sheet1', 'Feuille 1', 'Hoja 1'].forEach(n => { const s = ss.getSheetByName(n); if (s && ss.getSheets().length > 1) ss.deleteSheet(s); });
@@ -105,9 +104,30 @@ const num_ = s => { const n = parseFloat(String(s || '').replace(/[^\d,.-]/g, ''
 function gTrips_() {
   return gRows_(G.TRIPS).map(r => ({
     id: r[0].trim(), name: r[1].trim(), dates: r[2].trim(), sheetId: r[3].trim(), tab: r[4].trim(),
-    headerRow: parseInt(r[5], 10) || 1, optionCols: list_(r[6]), active: yes_(r[7]),
+    headerRow: parseInt(r[5], 10) || 1, optionDefs: optionDefs_(r[6]), active: yes_(r[7]),
     localCur: r[8].trim(), rate: num_(r[9]),
   }));
+}
+
+/** "Food pack, Seguro: Seguro Basic | Seguro Gold" → [{label:'Food pack', cols:['Food pack']}, {label:'Seguro', cols:[…]}] */
+function optionDefs_(s) {
+  return list_(s).map(x => {
+    const i = x.indexOf(':');
+    if (i < 0) return { label: x, cols: [x] };
+    return { label: x.slice(0, i).trim(), cols: x.slice(i + 1).split('|').map(c => c.trim()).filter(Boolean) };
+  });
+}
+
+/** "Single:40, Double:60" → names + own prices */
+function choiceDefs_(s, base) {
+  const names = [], prices = {};
+  list_(s).forEach(x => {
+    const i = x.lastIndexOf(':');
+    const n = (i < 0 ? x : x.slice(0, i)).trim();
+    names.push(n);
+    prices[n] = i < 0 ? base : num_(x.slice(i + 1));
+  });
+  return { names: names, prices: prices };
 }
 
 function gTrip_(id) {
@@ -116,7 +136,8 @@ function gTrip_(id) {
   t.buses = gRows_(G.BUSES).filter(r => r[0].trim() === id)
     .map(r => ({ bus: String(r[1]).trim(), colour: r[2].trim(), guide: r[3].trim() }));
   t.extras = gRows_(G.EXTRAS).filter(r => r[0].trim() === id)
-    .map(r => ({ name: r[1].trim(), price: num_(r[2]), choices: list_(r[3]), askDay: yes_(r[4]) }));
+    .map(r => { const c = choiceDefs_(r[3], num_(r[2])); return { name: r[1].trim(), price: num_(r[2]), choices: c.names, prices: c.prices, askDay: yes_(r[4]) }; });
+  t.optionCols = t.optionDefs.map(d => d.label);
   return t;
 }
 
@@ -150,15 +171,15 @@ function gLogin_(pin) {
 function gTravellers_(t) {
   const sh = SpreadsheetApp.openById(t.sheetId).getSheetByName(t.tab);
   if (!sh) throw new Error('Options tab not found for ' + t.id);
-  return parseTravellers_(sh.getDataRange().getDisplayValues(), t.headerRow, t.optionCols);
+  return parseTravellers_(sh.getDataRange().getDisplayValues(), t.headerRow, t.optionDefs);
 }
 
 /** Pure function (tested). */
-function parseTravellers_(values, headerRow, optionCols) {
+function parseTravellers_(values, headerRow, defs) {
   const hdr = values[headerRow - 1].map(h => String(h).trim());
   const iName = hdr.indexOf('Name'), iEnr = hdr.indexOf('Enr'), iBus = hdr.indexOf('Bus');
   if (iName < 0) throw new Error('No "Name" column in the options sheet');
-  const iOpt = optionCols.map(c => hdr.indexOf(c));
+  const iOpt = defs.map(d => d.cols.map(c => ({ c: c, i: hdr.indexOf(c) })).filter(x => x.i >= 0));
   const out = [];
   for (let r = headerRow; r < values.length; r++) {
     const row = values[r];
@@ -166,10 +187,15 @@ function parseTravellers_(values, headerRow, optionCols) {
     if (!name || /cancel/i.test(name)) continue;
     const id = iEnr >= 0 && String(row[iEnr] || '').trim() ? String(row[iEnr]).trim() : 'R' + (r + 1);
     const busRaw = iBus >= 0 ? String(row[iBus] || '').trim() : '1';
-    out.push({
-      id: id, name: name, bus: (busRaw.match(/\d+/) || [''])[0],
-      options: optionCols.filter((c, k) => iOpt[k] >= 0 && String(row[iOpt[k]] || '').trim() !== ''),
+    const options = [], detail = {};
+    defs.forEach((d, k) => {
+      const hit = iOpt[k].filter(x => String(row[x.i] || '').trim() !== '').map(x => x.c);
+      if (hit.length) {
+        options.push(d.label);
+        if (d.cols.length > 1) detail[d.label] = hit.map(h => h.replace(d.label, '').trim() || h).join(' + ');
+      }
     });
+    out.push({ id: id, name: name, bus: (busRaw.match(/\d+/) || [''])[0], options: options, detail: detail });
   }
   return out;
 }
@@ -230,8 +256,9 @@ function gEntryRow_(e, s, t) {
     if (!x) return null;
     const choice = x.choices.length ? (x.choices.indexOf(e.choice) >= 0 ? e.choice : '') : '';
     if (x.choices.length && !choice) return null;
+    const price = choice && x.prices && x.prices[choice] != null ? x.prices[choice] : x.price;
     return [e.id, created, t.id, s.bus, s.guide, 'SALE', clean(e.travellerId), clean(e.traveller), x.name, choice,
-      x.askDay ? clean(e.day) : '', '', '', x.price, 'EUR', x.price, 'OK', ''];
+      x.askDay ? clean(e.day) : '', '', '', price, 'EUR', price, 'OK', ''];
   }
   if (e.type === 'IN' || e.type === 'OUT') {
     const amount = Math.abs(num_(e.amount));

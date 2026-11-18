@@ -21,6 +21,16 @@
     return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   };
 
+  /** Price of an extra, using the choice's own price when it has one. */
+  C.price = function (x, choice) {
+    return choice && x.prices && x.prices[choice] != null ? x.prices[choice] : x.price;
+  };
+  C.priceLabel = function (x, trip, cur) {
+    const ps = x.choices.length && x.prices ? x.choices.map(c => C.price(x, c)) : [x.price];
+    const lo = Math.min.apply(null, ps), hi = Math.max.apply(null, ps);
+    return lo === hi ? C.money(lo, trip, cur) : C.money(lo, trip, cur) + ' – ' + C.money(hi, trip, cur);
+  };
+
   C.uid = function () {
     return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   };

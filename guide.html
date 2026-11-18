@@ -54,6 +54,7 @@
   .chip.b { background: var(--gsoft); color: var(--gtext); }
   .chip.x { background: var(--osoft); color: var(--obrown); }
   .chip.p { background: #EDE3E8; color: var(--muted); }
+  .chip.n { background: var(--rsoft); color: var(--red); }
   .addbtn { flex: none; width: 42px; height: 42px; border-radius: 12px; border: 0; background: var(--plum); color: #fff; display: grid; place-items: center; cursor: pointer; }
   .btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 15px; font-size: 17px; font-weight: 700; background: var(--plum); color: #fff; cursor: pointer; margin-top: 16px; }
   .btn.ghost { background: #fff; color: var(--plum); border: 1.5px solid var(--line); }
@@ -120,7 +121,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="config.js?v=5"></script>
-<script src="app-core.js?v=1"></script>
+<script src="app-core.js?v=2"></script>
 <script>
 const $ = id => document.getElementById(id);
 const store = {
@@ -254,9 +255,11 @@ function vTrav() {
       const ex = extrasOf(x.id, all);
       return `<div class="trav"><div class="trow"><div class="tname">${esc(x.name)}</div>` +
         (own ? `<button class="addbtn" data-addfor="${esc(x.id)}" aria-label="Add an extra for ${esc(x.name)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : '') + '</div>' +
-        `<div class="chips">${x.options.map(o => `<span class="chip b">${esc(o)}</span>`).join('')}` +
+        `<div class="chips">${t.optionCols.map(o => x.options.indexOf(o) >= 0
+          ? `<span class="chip b">${esc(o)}${x.detail && x.detail[o] ? ' · ' + esc(x.detail[o]) : ''}</span>`
+          : `<span class="chip n">No ${esc(o)}</span>`).join('')}` +
         ex.map(e => `<span class="chip ${e.pending ? 'p' : 'x'}">${esc(e.extra)}${e.choice ? ' · ' + esc(e.choice) : ''}${e.day ? ' · ' + esc(Core.dayLabel(e.day)) : ''}</span>`).join('') +
-        (!x.options.length && !ex.length ? '<span class="muted">No options</span>' : '') + '</div></div>';
+        '</div></div>';
     }).join('') : '<div class="card muted" style="margin-top:10px">Nobody matches.</div>');
 }
 
@@ -275,12 +278,12 @@ function vAdd() {
       (res.length ? '<div class="results">' + res.map(z => `<button data-pick="${esc(z.id)}">${esc(z.name)}</button>`).join('') + '</div>' : '');
   }
   h += '<span class="lbl">Extra</span><div class="grid2">' + t.extras.map(z =>
-    `<button class="opt" data-extra="${esc(z.name)}" aria-pressed="${A.extra === z.name}"><b>${esc(z.name)}</b><span>${m(z.price)}</span></button>`).join('') + '</div>';
+    `<button class="opt" data-extra="${esc(z.name)}" aria-pressed="${A.extra === z.name}"><b>${esc(z.name)}</b><span>${Core.priceLabel(z, S.data.trip, S.cur)}</span></button>`).join('') + '</div>';
   if (x && x.choices.length) h += '<span class="lbl">Choice</span><div class="pills">' + x.choices.map(c =>
-    `<button class="pill" data-choice="${esc(c)}" aria-pressed="${A.choice === c}">${esc(c)}</button>`).join('') + '</div>';
+    `<button class="pill" data-choice="${esc(c)}" aria-pressed="${A.choice === c}">${esc(c)}${x.prices && x.prices[c] !== x.price || Core.priceLabel(x, t, 'EUR').indexOf('–') >= 0 ? ' · ' + m(Core.price(x, c)) : ''}</button>`).join('') + '</div>';
   if (x && x.askDay) h += `<label class="lbl" for="addDay">For which day</label><input id="addDay" type="date" value="${esc(A.day)}">`;
   const ready = tr && x && (!x.choices.length || A.choice);
-  h += `<button class="btn" data-act="sell" ${ready ? '' : 'disabled'}>${x ? 'Cash received · ' + m(x.price) : 'Cash received'}</button>`;
+  h += `<button class="btn" data-act="sell" ${ready ? '' : 'disabled'}>${x && (!x.choices.length || A.choice) ? 'Cash received · ' + m(Core.price(x, A.choice)) : 'Cash received'}</button>`;
   return h;
 }
 
@@ -383,8 +386,9 @@ function nowIso() {
 function sell() {
   const t = S.data.trip, A = S.add, x = t.extras.find(z => z.name === A.extra), tr = S.data.travellers.find(z => String(z.id) === String(A.t));
   if (!x || !tr) return;
+  const price = Core.price(x, A.choice);
   queueAdd({ id: Core.uid(), created: nowIso(), type: 'SALE', travellerId: tr.id, traveller: tr.name, extra: x.name, choice: A.choice,
-    day: x.askDay ? A.day : '', bus: S.data.session.bus, guide: S.data.session.guide, amount: x.price, currency: 'EUR', eur: x.price, status: 'OK' });
+    day: x.askDay ? A.day : '', bus: S.data.session.bus, guide: S.data.session.guide, amount: price, currency: 'EUR', eur: price, status: 'OK' });
   toast('Saved · ' + x.name + ' · ' + tr.name);
   S.add = { t: null, extra: A.extra, choice: A.choice, day: A.day, q: '', focus: true }; render();
 }
