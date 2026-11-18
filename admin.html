@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Waivers · Team view</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div class="wrap wide">
@@ -27,11 +27,11 @@
     </div>
     <div class="stats" id="stats"></div>
     <div style="overflow:auto"><table><thead><tr>
-      <th>#</th><th>Name</th><th>Insurance now</th><th>Status</th><th>Signed at</th><th>Phone check</th><th>PDF</th><th></th>
+      <th>#</th><th>Name</th><th>Insurance now</th><th>Status</th><th>Signed at</th><th>Verified by</th><th>PDF</th><th></th>
     </tr></thead><tbody id="atb"></tbody></table></div>
   </div>
 </div>
-<script src="config.js?v=2"></script>
+<script src="config.js?v=3"></script>
 <script>
   const $ = id => document.getElementById(id);
   let KEY = '', ROWS = [];
@@ -49,12 +49,12 @@
     $('stats').innerHTML =
       `<div class="stat"><b>${ROWS.length}</b>participants</div><div class="stat"><b class="s-ok">${n('SIGNED')}</b>signed</div>` +
       `<div class="stat"><b class="s-no">${n('NOT SIGNED')}</b>not signed</div><div class="stat"><b class="s-warn">${n('RE-SIGN')}</b>to re-sign</div>` +
-      `<div class="stat"><b>${ROWS.filter(r => !r.hasPhone).length}</b>no phone on file</div>`;
+      `<div class="stat"><b>${ROWS.filter(r => !r.hasPhone).length}</b>no passport on file</div>`;
     const list = ROWS.filter(r => (!f || r.name.toLowerCase().includes(f)) && (!s || r.status.indexOf(s) === 0));
     $('atb').innerHTML = list.map(r => {
       const cls = r.status === 'SIGNED' ? 's-ok' : r.status === 'NOT SIGNED' ? 's-no' : 's-warn';
       return `<tr><td>${esc(r.enr)}</td><td>${esc(r.name)}</td><td>${r.version === 'CON' ? esc(r.insurances) : '—'}</td>` +
-        `<td class="${cls}">${esc(r.status)}</td><td>${esc(r.signedAt)}</td><td>${r.signedAt ? esc(r.verified) : (r.hasPhone ? '' : 'no phone')}</td>` +
+        `<td class="${cls}">${esc(r.status)}</td><td>${esc(r.signedAt)}</td><td>${r.signedAt ? esc(r.verified) : (r.hasPhone ? '' : 'no form')}</td>` +
         `<td>${r.pdf ? `<a href="${esc(r.pdf)}" target="_blank" rel="noopener">PDF</a>` : ''}</td>` +
         `<td>${r.signedAt ? `<button class="sec" style="padding:5px 9px;font-size:12px" data-enr="${esc(r.enr)}" data-n="${esc(r.name)}">Reset</button>` : ''}</td></tr>`;
     }).join('') || '<tr><td colspan="8">No result</td></tr>';

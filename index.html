@@ -2,161 +2,461 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Erasmus Life · Waiver</title>
-<link rel="stylesheet" href="style.css?v=2">
+<meta name="theme-color" content="#2340C8">
+<title>Erasmus Life · Morocco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cobalt: #2340C8; --cobalt-deep: #172C93; --saffron: #F4B21B; --saffron-soft: #FFF4D6;
+    --mint: #12805C; --mint-soft: #E2F3EC; --ink: #171A2B; --muted: #5B6178; --paper: #F5F6FB;
+    --line: #DCDFEA; --white: #fff; --err: #B42318;
+    --display: 'Bricolage Grotesque', system-ui, sans-serif; --body: 'Figtree', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--body); }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--saffron); outline-offset: 2px; }
+
+  /* hero */
+  .hero { position: relative; color: var(--white); background-color: var(--cobalt);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.13' stroke-width='1.4'%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Crect x='18' y='18' width='28' height='28' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3Cpath d='M0 0l10 10M64 0L54 10M0 64l10-10M64 64L54 54'/%3E%3C/g%3E%3C/svg%3E");
+    padding: calc(18px + env(safe-area-inset-top)) 20px 64px; }
+  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 28px; background: var(--paper);
+    -webkit-mask: radial-gradient(circle at 50% 0, transparent 13px, #000 13.5px) 0 0 / 34px 28px repeat-x;
+            mask: radial-gradient(circle at 50% 0, transparent 13px, #000 13.5px) 0 0 / 34px 28px repeat-x; }
+  .top { display: flex; justify-content: space-between; align-items: center; max-width: 520px; margin: 0 auto; }
+  .brand { font: 700 15px/1 var(--display); letter-spacing: .01em; }
+  .langs { display: flex; background: rgba(255,255,255,.14); border-radius: 999px; padding: 3px; }
+  .langs button { border: 0; background: none; color: #fff; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .langs button[aria-pressed="true"] { background: #fff; color: var(--cobalt-deep); }
+  .title { max-width: 520px; margin: 34px auto 0; }
+  .title h1 { font: 800 clamp(52px, 17vw, 84px)/.9 var(--display); letter-spacing: -.035em; margin: 0; }
+  .title p { margin: 10px 0 0; font-size: 17px; opacity: .9; }
+
+  /* content */
+  main { max-width: 520px; margin: 0 auto; padding: 0 16px calc(48px + env(safe-area-inset-bottom)); position: relative; }
+  .progress { display: flex; gap: 6px; margin: 22px 4px 16px; }
+  .progress span { flex: 1; height: 4px; border-radius: 4px; background: var(--line); }
+  .progress span.on { background: var(--cobalt); }
+  .panel { background: var(--white); border-radius: 20px; padding: 22px 20px; box-shadow: 0 1px 0 var(--line), 0 12px 32px -22px rgba(23,44,147,.45); }
+  .panel + .panel { margin-top: 14px; }
+  h2 { font: 700 24px/1.15 var(--display); letter-spacing: -.015em; margin: 0 0 6px; }
+  .lead { color: var(--muted); margin: 0 0 18px; }
+  .panel > label.f:first-child { margin-top: 0; }
+  label.f { display: block; font-weight: 600; font-size: 14px; margin: 16px 0 6px; }
+  input[type=text], input[type=date], input[type=search] { width: 100%; padding: 14px; font-size: 17px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; }
+  input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px rgba(35,64,200,.15); }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 15px 18px; font-weight: 600; font-size: 17px; cursor: pointer; background: var(--cobalt); color: #fff; margin-top: 18px; text-align: center; text-decoration: none; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .55; }
+  .btn.ghost { background: transparent; color: var(--cobalt); border: 1.5px solid var(--line); }
+  .link { background: none; border: 0; color: var(--cobalt); font-weight: 600; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .err { color: var(--err); font-size: 14px; margin-top: 10px; min-height: 0; }
+  .err:empty { display: none; }
+
+  .results { margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--line); }
+  .results button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: #fff; padding: 14px; font-size: 16px; cursor: pointer; }
+  .results button:last-child { border-bottom: 0; }
+  .results button:hover { background: var(--paper); }
+  .results .empty { padding: 14px; color: var(--muted); font-size: 15px; }
+
+  /* trip */
+  .who { font: 700 28px/1.1 var(--display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 6px; }
+  .fact { background: var(--paper); border-radius: 14px; padding: 12px 14px; }
+  .fact small { display: block; color: var(--muted); font-size: 13px; }
+  .fact b { display: block; font: 700 18px/1.25 var(--display); margin-top: 2px; }
+  .fact.wide { grid-column: 1 / -1; }
+  .fact.wide b { font: 600 16px/1.35 var(--body); }
+  h3 { font: 700 17px/1.3 var(--display); margin: 22px 0 8px; }
+  ul.opts { list-style: none; margin: 0; padding: 0; }
+  ul.opts li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  ul.opts li:last-child { border-bottom: 0; }
+  .mark { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+  .yes .mark { background: var(--mint-soft); color: var(--mint); }
+  .no .mark { background: var(--paper); color: #A2A7BA; }
+  .no .lbl { color: var(--muted); }
+  .lbl em { font-style: normal; color: var(--muted); font-size: 14px; display: block; }
+  .note { border-radius: 14px; padding: 14px 16px; margin-top: 12px; font-size: 15px; }
+  .note.warn { background: var(--saffron-soft); border-left: 5px solid var(--saffron); }
+  .note.ok { background: var(--mint-soft); border-left: 5px solid var(--mint); }
+  .note b { display: block; margin-bottom: 2px; }
+  .help { text-align: center; margin-top: 18px; font-size: 15px; color: var(--muted); }
+
+  /* waiver */
+  .badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
+  .badge.con { background: var(--mint-soft); color: var(--mint); }
+  .badge.sin { background: var(--saffron-soft); color: #8A5A00; }
+  .text { max-height: 48vh; overflow: auto; border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; font-size: 14.5px; line-height: 1.55; background: #FCFCFE; }
+  .text h4 { font: 700 15px/1.3 var(--display); margin: 0 0 10px; }
+  .text p { margin: 0 0 10px; }
+  canvas { display: block; width: 100%; height: 170px; border: 1.5px dashed #A9B0C7; border-radius: 14px; background: #fff; touch-action: none; }
+  .sigbar { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 13px; color: var(--muted); }
+  .chk { display: flex; gap: 12px; align-items: flex-start; margin-top: 18px; font-size: 15px; }
+  .chk input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--cobalt); }
+
+  .done { text-align: center; padding: 30px 20px; }
+  .done .seal { width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 50%; background: var(--mint); color: #fff; display: grid; place-items: center; font-size: 38px; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: no-preference) {
+    .seal { animation: pop .45s cubic-bezier(.2,1.4,.4,1) both; }
+    @keyframes pop { from { transform: scale(.4); opacity: 0; } }
+  }
+</style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Erasmus Life · <span id="trip">Morocco Trip</span></h1>
-  <div class="sub"><span id="dates"></span> · Liability waiver / Descargo de responsabilidad</div>
+<header class="hero">
+  <div class="top">
+    <div class="brand">Erasmus Life</div>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button><button type="button" data-lang="es">ES</button>
+    </div>
+  </div>
+  <div class="title">
+    <h1 data-t="heroTitle">Morocco</h1>
+    <p id="dates">4–13 December 2026</p>
+  </div>
+</header>
 
-  <div class="card" id="s1">
-    <label for="q">Type your name · Escribe tu nombre</label>
-    <input type="text" id="q" autocomplete="off" placeholder="e.g. Jane Doe">
-    <div class="res hidden" id="res"></div>
+<main>
+  <div class="progress" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+  <!-- 1 search -->
+  <section class="panel" id="s1">
+    <h2 data-t="findTitle"></h2>
+    <p class="lead" data-t="findLead"></p>
+    <label class="f" for="q" data-t="nameLabel"></label>
+    <input type="search" id="q" autocomplete="off" placeholder="e.g. Jane Doe">
+    <div class="results" id="res" hidden></div>
     <div class="err" id="e1"></div>
-  </div>
+  </section>
 
-  <div class="card hidden" id="s2">
-    <div><b id="who"></b></div>
-    <label for="dg">Last <span class="nd">3</span> digits of your WhatsApp number · Últimas <span class="nd">3</span> cifras de tu número de WhatsApp</label>
-    <input type="tel" id="dg" inputmode="numeric" maxlength="3" placeholder="123">
+  <!-- 2 verify -->
+  <section class="panel" id="s2" hidden>
+    <h2 id="hello"></h2>
+    <p class="lead" data-t="verifyLead"></p>
+    <label class="f" for="pp1" data-t="passportLabel"></label>
+    <input type="text" id="pp1" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <div class="hint" data-t="passportHint"></div>
     <div class="err" id="e2"></div>
-    <div class="row" style="margin-top:10px">
-      <button class="sec" onclick="restart()">← Back</button>
-      <button id="vb" onclick="verify()">Continue · Continuar</button>
-    </div>
+    <button class="btn" id="vb" data-t="showTrip"></button>
+    <p class="help"><button class="link" id="back1" data-t="notYou"></button></p>
+  </section>
+
+  <!-- 3 trip -->
+  <div id="s3" hidden>
+    <section class="panel">
+      <p class="who" id="tName"></p>
+      <div class="facts">
+        <div class="fact"><small data-t="bus"></small><b id="tBus"></b></div>
+        <div class="fact"><small data-t="payment"></small><b id="tPay"></b></div>
+        <div class="fact wide"><small data-t="departure"></small><b id="tDep"></b></div>
+      </div>
+      <div id="tBalance"></div>
+
+      <h3 data-t="optionsTitle"></h3>
+      <ul class="opts" id="tOpts"></ul>
+
+      <h3 data-t="insuranceTitle"></h3>
+      <div id="tIns"></div>
+
+      <p class="help" id="helpRow" hidden><span data-t="wrong"></span> <a class="link" id="waLink" target="_blank" rel="noopener" data-t="contactUs"></a></p>
+    </section>
+
+    <section class="panel" id="wPanel">
+      <h2 data-t="waiverTitle"></h2>
+      <div id="wState"></div>
+    </section>
   </div>
 
-  <div class="hidden" id="s3">
-    <div class="card">
-      <div class="row"><b id="who3"></b><span id="badge" class="badge"></span></div>
-      <div style="height:10px"></div>
-      <div class="lang"><button id="len" onclick="setLang('en')">English</button><button id="les" class="sec" onclick="setLang('es')">Español</button></div>
-      <div class="text" id="txt"></div>
-    </div>
-    <div class="card">
-      <label for="fn">Full name (as on passport) · Nombre completo (como en el pasaporte)</label>
+  <!-- 4 sign -->
+  <div id="s4" hidden>
+    <section class="panel">
+      <span class="badge" id="badge"></span>
+      <h2 data-t="readTitle"></h2>
+      <p class="lead" data-t="readLead"></p>
+      <div class="text" id="txt" tabindex="0"></div>
+    </section>
+    <section class="panel">
+      <label class="f" for="fn" data-t="fullName"></label>
       <input type="text" id="fn" autocomplete="name">
-      <label for="dob">Date of birth · Fecha de nacimiento</label>
+      <label class="f" for="dob" data-t="dob"></label>
       <input type="date" id="dob">
-      <label for="pp">Passport number · Número de pasaporte</label>
-      <input type="text" id="pp" autocapitalize="characters" autocomplete="off">
-      <label>Signature · Firma</label>
-      <canvas id="sig"></canvas>
-      <div class="row" style="margin-top:6px"><span style="font-size:13px;color:#666">Sign with your finger · Firma con el dedo</span>
-        <button class="sec" style="padding:6px 10px;font-size:13px" onclick="initSig()">Clear · Borrar</button></div>
-      <label class="chk"><input type="checkbox" id="acc"><span id="acctxt"></span></label>
-      <div class="err" id="e3"></div>
-      <button id="sb" style="width:100%;margin-top:6px" onclick="submitW()">Sign · Firmar</button>
-    </div>
+      <label class="f" for="pp" data-t="passportLabel"></label>
+      <input type="text" id="pp" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <label class="f" data-t="signature"></label>
+      <canvas id="sig" aria-label="Signature pad"></canvas>
+      <div class="sigbar"><span data-t="signHint"></span><button class="link" id="clr" data-t="clear"></button></div>
+      <label class="chk"><input type="checkbox" id="acc"><span data-t="accept"></span></label>
+      <div class="err" id="e4"></div>
+      <button class="btn" id="sb" data-t="signBtn"></button>
+      <p class="help"><button class="link" id="back3" data-t="backTrip"></button></p>
+    </section>
   </div>
 
-  <div class="card hidden" id="s4">
-    <h1>✅ Thank you! · ¡Gracias!</h1>
-    <p>Your waiver has been signed and saved. You can close this page.<br>Tu descargo ha sido firmado y guardado. Puedes cerrar esta página.</p>
-  </div>
-</div>
+  <!-- 5 done -->
+  <section class="panel done" id="s5" hidden>
+    <div class="seal">✓</div>
+    <h2 data-t="doneTitle"></h2>
+    <p class="lead" data-t="doneLead"></p>
+    <button class="btn ghost" id="back5" data-t="backTrip"></button>
+  </section>
+</main>
 
-<script src="config.js?v=2"></script>
+<script src="config.js?v=3"></script>
 <script>
-  const $ = id => document.getElementById(id);
-  let ENR = null, TOKEN = null, TEXTS = null, LANG = 'en', drawn = 0, timer = null, seq = 0;
-  const MSG = {
-    blocked: 'Too many attempts – try again in 15 min or ask the staff. · Demasiados intentos – inténtalo en 15 min o pregunta al staff.',
-    digits: 'Digits do not match. · Las cifras no coinciden.',
-    already: 'This waiver is already signed. · Este descargo ya está firmado.',
-    notfound: 'Name not found – ask the staff. · Nombre no encontrado – pregunta al staff.',
-    closed: 'Signing is closed. · La firma está cerrada.',
-    expired: 'Session expired, please start again. · Sesión caducada, vuelve a empezar.',
-    accept: 'Please tick the box. · Marca la casilla.',
-    fullName: 'Please type your full name. · Escribe tu nombre completo.',
-    dob: 'Please enter your date of birth. · Indica tu fecha de nacimiento.',
-    passport: 'Please enter your passport number. · Indica tu número de pasaporte.',
-    signature: 'Please sign in the box. · Firma en el recuadro.',
-    network: 'Connection problem, please try again. · Problema de conexión, inténtalo de nuevo.',
-  };
-  const show = id => { ['s1','s2','s3','s4'].forEach(s => $(s).classList.toggle('hidden', s !== id)); window.scrollTo(0, 0); };
+const T = {
+  en: {
+    heroTitle: 'Morocco', findTitle: 'Your trip', findLead: 'Check your options, insurance and bus, and sign the waiver.',
+    nameLabel: 'Your name', noResult: 'No match. Try only your first or last name.',
+    hello: n => `Hi ${n}`, verifyLead: 'To protect your details, confirm it’s you.',
+    passportLabel: 'Passport number', passportHint: 'The one you gave us in the registration form.',
+    showTrip: 'Show my trip', notYou: 'Not you? Search again',
+    bus: 'Bus', payment: 'Payment', departure: 'Departure and return',
+    paid: 'Paid', due: 'To pay', dueNote: b => `<b>Balance to pay: ${b}</b>Please pay it before departure.`,
+    optionsTitle: 'Your options', insuranceTitle: 'Travel insurance',
+    opt: { 'Food pack': 'Food pack', 'Mosque': 'Mosque visit', '4X4': '4x4 desert tour', 'SIM card': 'SIM card' },
+    notTaken: 'Not included',
+    insYes: i => `<b>INNOVAC ${i}</b>You are insured for the trip.`,
+    insNo: d => `<b>No travel insurance</b>The European Health Insurance Card is not valid in Morocco. You can still add insurance until ${d}: contact us.`,
+    insNoLate: '<b>No travel insurance</b>Medical costs in Morocco will be on you or your own insurance.',
+    wrong: 'Something wrong?', contactUs: 'Contact us on WhatsApp',
+    waiverTitle: 'Liability waiver',
+    wClosed: d => `<p class="lead">The waiver opens on ${d}, once insurance choices are final. Come back with the same link.</p>`,
+    wSigned: d => `<div class="note ok"><b>Signed</b>On ${d}. Nothing else to do.</div>`,
+    wResign: '<div class="note warn"><b>Please sign again</b>Your insurance changed since you signed.</div>',
+    wTodo: '<p class="lead">Every traveller signs it before departure. It takes 2 minutes.</p>',
+    signNow: 'Read and sign',
+    readTitle: 'Read the waiver', readLead: 'Scroll to the end before signing.',
+    con: 'With insurance', sin: 'Without insurance',
+    fullName: 'Full name, as on your passport', dob: 'Date of birth', signature: 'Signature',
+    signHint: 'Sign with your finger', clear: 'Clear', accept: 'I have read and accept this declaration.',
+    signBtn: 'Sign the waiver', backTrip: 'Back to my trip',
+    doneTitle: 'Waiver signed', doneLead: 'Thank you. See you on board!',
+    err: {
+      blocked: 'Too many attempts. Try again in 15 minutes or ask the staff.',
+      passport: 'This passport number doesn’t match our records.',
+      nodata: 'We don’t have your registration form. Please contact the staff.',
+      notfound: 'Booking not found. Please contact the staff.',
+      already: 'This waiver is already signed.', closed: 'The waiver is not open yet.',
+      expired: 'Your session expired. Search your name again.',
+      accept: 'Tick the box to accept.', fullName: 'Type your full name.', dob: 'Enter your date of birth.',
+      passport_f: 'Enter your passport number.', signature: 'Sign in the box.', network: 'Connection problem. Try again.',
+    },
+  },
+  es: {
+    heroTitle: 'Marruecos', findTitle: 'Tu viaje', findLead: 'Revisa tus opciones, tu seguro y tu bus, y firma el descargo.',
+    nameLabel: 'Tu nombre', noResult: 'Sin resultados. Prueba solo con tu nombre o tu apellido.',
+    hello: n => `Hola, ${n}`, verifyLead: 'Para proteger tus datos, confirma que eres tú.',
+    passportLabel: 'Número de pasaporte', passportHint: 'El que nos diste en el formulario de inscripción.',
+    showTrip: 'Ver mi viaje', notYou: '¿No eres tú? Busca de nuevo',
+    bus: 'Bus', payment: 'Pago', departure: 'Salida y regreso',
+    paid: 'Pagado', due: 'Pendiente', dueNote: b => `<b>Pendiente de pago: ${b}</b>Págalo antes de la salida.`,
+    optionsTitle: 'Tus opciones', insuranceTitle: 'Seguro de viaje',
+    opt: { 'Food pack': 'Pack de comidas', 'Mosque': 'Visita a la mezquita', '4X4': 'Excursión 4x4 por el desierto', 'SIM card': 'Tarjeta SIM' },
+    notTaken: 'No incluido',
+    insYes: i => `<b>INNOVAC ${i}</b>Estás asegurado/a durante el viaje.`,
+    insNo: d => `<b>Sin seguro de viaje</b>La Tarjeta Sanitaria Europea no sirve en Marruecos. Aún puedes contratar el seguro hasta el ${d}: contáctanos.`,
+    insNoLate: '<b>Sin seguro de viaje</b>Los gastos médicos en Marruecos correrán de tu cuenta o de tu propio seguro.',
+    wrong: '¿Algo no cuadra?', contactUs: 'Escríbenos por WhatsApp',
+    waiverTitle: 'Descargo de responsabilidad',
+    wClosed: d => `<p class="lead">El descargo se abre el ${d}, cuando los seguros estén cerrados. Vuelve con el mismo enlace.</p>`,
+    wSigned: d => `<div class="note ok"><b>Firmado</b>El ${d}. No tienes que hacer nada más.</div>`,
+    wResign: '<div class="note warn"><b>Vuelve a firmar</b>Tu seguro ha cambiado desde que firmaste.</div>',
+    wTodo: '<p class="lead">Todos los viajeros lo firman antes de salir. Son 2 minutos.</p>',
+    signNow: 'Leer y firmar',
+    readTitle: 'Lee el descargo', readLead: 'Desplázate hasta el final antes de firmar.',
+    con: 'Con seguro', sin: 'Sin seguro',
+    fullName: 'Nombre completo, como en el pasaporte', dob: 'Fecha de nacimiento', signature: 'Firma',
+    signHint: 'Firma con el dedo', clear: 'Borrar', accept: 'He leído y acepto esta declaración.',
+    signBtn: 'Firmar el descargo', backTrip: 'Volver a mi viaje',
+    doneTitle: 'Descargo firmado', doneLead: 'Gracias. ¡Nos vemos en el bus!',
+    err: {
+      blocked: 'Demasiados intentos. Vuelve a probar en 15 minutos o pregunta al staff.',
+      passport: 'Este número de pasaporte no coincide con nuestros datos.',
+      nodata: 'No tenemos tu formulario de inscripción. Contacta con el staff.',
+      notfound: 'Reserva no encontrada. Contacta con el staff.',
+      already: 'Este descargo ya está firmado.', closed: 'El descargo aún no está abierto.',
+      expired: 'Tu sesión ha caducado. Busca tu nombre otra vez.',
+      accept: 'Marca la casilla para aceptar.', fullName: 'Escribe tu nombre completo.', dob: 'Indica tu fecha de nacimiento.',
+      passport_f: 'Indica tu número de pasaporte.', signature: 'Firma en el recuadro.', network: 'Problema de conexión. Inténtalo de nuevo.',
+    },
+  },
+};
 
-  api('config').then(c => {
-    $('trip').textContent = c.trip; $('dates').textContent = c.dates;
-    document.querySelectorAll('.nd').forEach(e => e.textContent = c.digits);
-    $('dg').maxLength = c.digits;
-    if (!c.open) $('e1').textContent = MSG.closed;
-  }).catch(() => {});
+const $ = id => document.getElementById(id);
+let L = (navigator.language || 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
+let CFG = {}, ENR = null, NAME = '', DATA = null, TOKEN = null, step = 1, drawn = 0, timer = null, seq = 0;
 
-  $('q').addEventListener('input', () => {
-    clearTimeout(timer); const q = $('q').value; $('e1').textContent = '';
-    if (q.trim().length < 3) { $('res').classList.add('hidden'); return; }
-    timer = setTimeout(async () => {
-      const my = ++seq;
-      try {
-        const r = await api('search', { q });
-        if (my !== seq) return;
-        if (r.closed) { $('e1').textContent = MSG.closed; return; }
-        const box = $('res'); box.classList.remove('hidden');
-        box.innerHTML = r.results.length ? r.results.map(p => p.signed
-          ? `<div class="done">${esc(p.name)} – ✓ signed</div>`
-          : `<div data-enr="${esc(p.enr)}" data-n="${esc(p.name)}">${esc(p.name)}</div>`).join('')
-          : '<div class="done">No result – try your first or last name only · Sin resultado</div>';
-        box.querySelectorAll('div[data-enr]').forEach(d => d.onclick = () => pick(d.dataset.enr, d.dataset.n));
-      } catch (e) { $('e1').textContent = MSG.network; }
-    }, 350);
-  });
+function t(k) { return T[L][k]; }
+function fmtDate(iso) { // 2026-11-26 → 26 November / 26 de noviembre
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString(L === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'long' });
+}
+function errMsg(code, extra) { return (T[L].err[code] || code) + (extra || ''); }
 
-  function pick(enr, name) { ENR = enr; $('who').textContent = name; $('dg').value = ''; $('e2').textContent = ''; show('s2'); $('dg').focus(); }
-  function restart() { ENR = null; TOKEN = null; $('q').value = ''; $('res').classList.add('hidden'); show('s1'); }
+function applyLang() {
+  document.documentElement.lang = L;
+  document.querySelectorAll('[data-t]').forEach(el => { const v = t(el.dataset.t); if (typeof v === 'string') el.textContent = v; });
+  document.querySelectorAll('.langs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === L)));
+  if (NAME) $('hello').textContent = t('hello')(NAME.split(' ')[0]);
+  renderDates();
+  if (DATA) { renderTrip(); renderWaiverText(); }
+}
+document.querySelectorAll('.langs button').forEach(b => b.onclick = () => { L = b.dataset.lang; applyLang(); });
 
-  async function verify() {
-    $('vb').disabled = true; $('e2').textContent = '';
+function show(n) {
+  step = n;
+  ['s1','s2','s3','s4','s5'].forEach((id, i) => $(id).hidden = i + 1 !== n);
+  const bars = document.querySelectorAll('.progress span');
+  const level = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 4 }[n];
+  bars.forEach((b, i) => b.classList.toggle('on', i < level));
+  window.scrollTo({ top: 0 });
+}
+
+api('config').then(c => {
+  CFG = c;
+  renderDates();
+}).catch(() => {});
+function renderDates() {
+  const m = String(CFG.dates || '').match(/(\d+)\/(\d+)\/(\d+).*?(\d+)\/(\d+)\/(\d+)/);
+  if (!m) return;
+  const month = new Date(m[6] + '-' + m[5] + '-01T12:00').toLocaleDateString(L === 'es' ? 'es-ES' : 'en-GB', { month: 'long' });
+  $('dates').textContent = L === 'es' ? `Del ${+m[1]} al ${+m[4]} de ${month} de ${m[6]}` : `${+m[1]}–${+m[4]} ${month} ${m[6]}`;
+}
+
+/* 1 · search */
+$('q').addEventListener('input', () => {
+  clearTimeout(timer); $('e1').textContent = '';
+  const q = $('q').value;
+  if (q.trim().length < 3) { $('res').hidden = true; return; }
+  timer = setTimeout(async () => {
+    const my = ++seq;
     try {
-      const r = await api('verify', { enr: ENR, digits: $('dg').value });
-      if (!r.ok) { $('e2').textContent = (MSG[r.error] || r.error) + (r.error === 'digits' && r.left >= 0 ? ` (${r.left} left)` : ''); return; }
-      TOKEN = r.token; TEXTS = r.texts;
-      $('who3').textContent = r.name;
-      $('badge').className = 'badge ' + (r.version === 'CON' ? 'con' : 'sin');
-      $('badge').textContent = r.version === 'CON' ? 'With insurance · Con seguro' : 'No insurance · Sin seguro';
-      setLang('en'); show('s3'); setTimeout(initSig, 50);
-    } catch (e) { $('e2').textContent = MSG.network; }
-    finally { $('vb').disabled = false; }
-  }
+      const r = await api('search', { q });
+      if (my !== seq) return;
+      const box = $('res'); box.hidden = false;
+      box.innerHTML = r.results.length
+        ? r.results.map(p => `<button type="button" data-enr="${esc(p.enr)}" data-n="${esc(p.name)}">${esc(p.name)}</button>`).join('')
+        : `<div class="empty">${esc(t('noResult'))}</div>`;
+      box.querySelectorAll('button').forEach(b => b.onclick = () => pick(b.dataset.enr, b.dataset.n));
+    } catch (e) { $('e1').textContent = errMsg('network'); }
+  }, 300);
+});
 
-  function setLang(l) {
-    LANG = l; const t = TEXTS[l];
-    $('txt').innerHTML = '<h3>' + esc(t.title) + '</h3>' + t.paragraphs.map(p => '<p>' + esc(p) + '</p>').join('');
-    $('len').className = l === 'en' ? '' : 'sec'; $('les').className = l === 'es' ? '' : 'sec';
-    $('acctxt').textContent = l === 'en' ? 'I have read and accept this declaration.' : 'He leído y acepto esta declaración.';
-  }
+function pick(enr, name) {
+  ENR = enr; NAME = name;
+  $('hello').textContent = t('hello')(name.split(' ')[0]);
+  $('pp1').value = ''; $('e2').textContent = '';
+  show(2); $('pp1').focus();
+}
+function restart() { ENR = null; NAME = ''; DATA = null; TOKEN = null; $('q').value = ''; $('res').hidden = true; show(1); }
+$('back1').onclick = restart;
 
-  let ctx, drawing = false;
-  function initSig() {
-    const c = $('sig'), r = Math.min(window.devicePixelRatio || 1, 2);
-    c.width = c.clientWidth * r; c.height = c.clientHeight * r;
-    ctx = c.getContext('2d'); ctx.scale(r, r);
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-    ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111'; drawn = 0;
-    const pos = e => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-    c.onpointerdown = e => { drawing = true; c.setPointerCapture(e.pointerId); const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
-    c.onpointermove = e => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); drawn++; };
-    c.onpointerup = c.onpointercancel = () => { drawing = false; };
-  }
+/* 2 · verify */
+async function verify() {
+  $('e2').textContent = '';
+  if ($('pp1').value.trim().length < 5) { $('e2').textContent = errMsg('passport_f'); return; }
+  $('vb').disabled = true;
+  try {
+    const r = await api('verify', { enr: ENR, passport: $('pp1').value });
+    if (!r.ok) {
+      const left = r.error === 'passport' && r.left >= 0 ? ` (${r.left})` : '';
+      $('e2').textContent = errMsg(r.error, left); return;
+    }
+    DATA = r; TOKEN = r.token;
+    renderTrip(); show(3);
+  } catch (e) { $('e2').textContent = errMsg('network'); }
+  finally { $('vb').disabled = false; }
+}
+$('vb').onclick = verify;
+$('pp1').addEventListener('keydown', e => { if (e.key === 'Enter') verify(); });
 
-  async function submitW() {
-    $('e3').textContent = '';
-    if (drawn < 15) { $('e3').textContent = MSG.signature; return; }
-    const form = { fullName: $('fn').value, dob: $('dob').value, passport: $('pp').value, accept: $('acc').checked,
-      lang: LANG, signature: $('sig').toDataURL('image/png') };
-    $('sb').disabled = true; $('sb').textContent = '…';
-    try {
-      const r = await api('submit', { token: TOKEN, form });
-      if (r.ok) { show('s4'); return; }
-      $('e3').textContent = MSG[r.error] || r.error;
-      if (r.error === 'expired' || r.error === 'already') setTimeout(restart, 2500);
-    } catch (e) { $('e3').textContent = MSG.network; }
-    finally { $('sb').disabled = false; $('sb').textContent = 'Sign · Firmar'; }
+/* 3 · trip */
+function renderTrip() {
+  const tr = DATA.trip, s = DATA.signing;
+  $('tName').textContent = tr.name;
+  $('tBus').textContent = tr.bus ? tr.bus.replace(/^bus\s*/i, '') : '—';
+  $('tPay').textContent = tr.paid ? t('paid') + ' ✓' : t('due');
+  $('tDep').textContent = tr.departure || '—';
+  $('tBalance').innerHTML = tr.balance ? `<div class="note warn">${t('dueNote')(esc(tr.balance))}</div>` : '';
+  $('tOpts').innerHTML = tr.options.map(o =>
+    `<li class="${o.taken ? 'yes' : 'no'}"><span class="mark">${o.taken ? '✓' : '–'}</span>
+     <span class="lbl">${esc(t('opt')[o.key] || o.key)}${o.taken ? '' : `<em>${esc(t('notTaken'))}</em>`}</span></li>`).join('');
+  $('tIns').innerHTML = tr.insurances.length
+    ? `<div class="note ok">${t('insYes')(esc(tr.insurances.join(' + ')))}</div>`
+    : `<div class="note warn">${tr.insuranceStillPossible ? t('insNo')(fmtDate(tr.insuranceDeadline)) : t('insNoLate')}</div>`;
+  if (CFG.contact) {
+    const msg = encodeURIComponent(`Hi! ${tr.name} – Morocco trip: `);
+    $('waLink').href = `https://wa.me/${CFG.contact}?text=${msg}`;
+    $('helpRow').hidden = false;
   }
+  let w;
+  if (s.signedAt && !s.needsResign) w = t('wSigned')(esc(s.signedAt));
+  else if (!s.open) w = t('wClosed')(L === 'es' ? esc(CFG.opensEs || '') : esc(CFG.opensEn || ''));
+  else w = (s.needsResign ? t('wResign') : t('wTodo')) + `<button class="btn" id="goSign">${esc(t('signNow'))}</button>`;
+  $('wState').innerHTML = w;
+  const g = $('goSign'); if (g) g.onclick = openSign;
+}
+
+/* 4 · sign */
+function renderWaiverText() {
+  const s = DATA.signing, tx = s.texts[L];
+  $('badge').className = 'badge ' + (s.version === 'CON' ? 'con' : 'sin');
+  $('badge').textContent = s.version === 'CON' ? t('con') : t('sin');
+  $('txt').innerHTML = '<h4>' + esc(tx.title) + '</h4>' + tx.paragraphs.map(p => '<p>' + esc(p) + '</p>').join('');
+}
+function openSign() {
+  renderWaiverText();
+  $('dob').value = DATA.signing.prefill.dob || '';
+  $('pp').value = DATA.signing.prefill.passport || '';
+  $('e4').textContent = ''; $('acc').checked = false;
+  show(4); setTimeout(initSig, 60);
+}
+$('back3').onclick = () => show(3);
+$('back5').onclick = () => show(3);
+
+let ctx, drawing = false;
+function initSig() {
+  const c = $('sig'), r = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = c.clientWidth * r; c.height = c.clientHeight * r;
+  ctx = c.getContext('2d'); ctx.scale(r, r);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#171A2B'; drawn = 0;
+  const pos = e => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  c.onpointerdown = e => { drawing = true; c.setPointerCapture(e.pointerId); const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
+  c.onpointermove = e => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); drawn++; };
+  c.onpointerup = c.onpointercancel = () => { drawing = false; };
+}
+$('clr').onclick = initSig;
+
+$('sb').onclick = async () => {
+  $('e4').textContent = '';
+  const form = { fullName: $('fn').value, dob: $('dob').value, passport: $('pp').value, accept: $('acc').checked,
+    lang: L, signature: $('sig').toDataURL('image/png') };
+  if (!form.fullName.trim()) { $('e4').textContent = errMsg('fullName'); return; }
+  if (drawn < 15) { $('e4').textContent = errMsg('signature'); return; }
+  if (!form.accept) { $('e4').textContent = errMsg('accept'); return; }
+  $('sb').disabled = true;
+  try {
+    const r = await api('submit', { token: TOKEN, form });
+    if (r.ok) {
+      DATA.signing.signedAt = r.signedAt; DATA.signing.needsResign = false;
+      renderTrip(); show(5); return;
+    }
+    $('e4').textContent = errMsg(r.error === 'passport' ? 'passport_f' : r.error);
+    if (r.error === 'expired') setTimeout(restart, 2500);
+  } catch (e) { $('e4').textContent = errMsg('network'); }
+  finally { $('sb').disabled = false; }
+};
+
+applyLang(); show(1);
 </script>
 </body>
 </html>
