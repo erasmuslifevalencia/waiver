@@ -33,7 +33,7 @@ const CONFIG = {
   PRIVACY_EMAIL: 'vlc.erasmuslife@gmail.com', // ← check: contact for data-protection requests
 
   // "Something wrong?" button – WhatsApp number in international format without + (empty = button hidden)
-  CONTACT_WHATSAPP: '',
+  CONTACT_WHATSAPP: '34634300402',
 
   // Insurance can still be added until this date (YYYY-MM-DD, inclusive)
   INSURANCE_DEADLINE: '2026-11-26',
