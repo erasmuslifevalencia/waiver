@@ -284,8 +284,17 @@ function vAdd() {
   if (x && x.choices.length) h += '<span class="lbl">Choice</span><div class="pills">' + x.choices.map(c =>
     `<button class="pill" data-choice="${esc(c)}" aria-pressed="${A.choice === c}">${esc(c)}${x.prices && x.prices[c] !== x.price || Core.priceLabel(x, t, 'EUR').indexOf('–') >= 0 ? ' · ' + m(Core.price(x, c)) : ''}</button>`).join('') + '</div>';
   if (x && x.askDay) h += `<label class="lbl" for="addDay">For which day</label><input id="addDay" type="date" value="${esc(A.day)}">`;
-  const ready = tr && x && (!x.choices.length || A.choice);
-  h += `<button class="btn" data-act="sell" ${ready ? '' : 'disabled'}>${x && (!x.choices.length || A.choice) ? 'Cash received · ' + m(Core.price(x, A.choice)) : 'Cash received'}</button>`;
+  const cur = x && (!x.choices.length || A.choice);
+  const basket = A.basket || [];
+  if (cur) h += `<button class="btn ghost" data-act="toBasket">+ Add to the list and choose another</button>`;
+  if (basket.length) {
+    h += '<span class="lbl">To charge</span><div class="card" style="padding:4px 14px">' + basket.map((b, i) =>
+      `<div class="entry"><div>${esc(b.extra)}${b.choice ? ' · ' + esc(b.choice) : ''}${b.day ? '<small>' + esc(Core.dayLabel(b.day)) + '</small>' : ''}</div>` +
+      `<div style="display:flex;align-items:center;gap:10px"><span class="amt">${m(b.price)}</span><button class="link" data-unbasket="${i}" aria-label="Remove">Remove</button></div></div>`).join('') + '</div>';
+  }
+  const items = basket.concat(cur ? [{ price: Core.price(x, A.choice) }] : []);
+  const total = items.reduce((a, b) => a + b.price, 0);
+  h += `<button class="btn" data-act="sell" ${tr && items.length ? '' : 'disabled'}>${items.length ? 'Cash received · ' + m(total) + (items.length > 1 ? ' (' + items.length + ' extras)' : '') : 'Cash received'}</button>`;
   return h;
 }
 
@@ -353,7 +362,7 @@ document.addEventListener('click', e => {
   if (d.cur) { S.cur = d.cur; initView(); render(); return; }
   if (d.bus) { S.busView = d.bus; render(); return; }
   if (d.filter !== undefined) { S.filter = d.filter; render(); return; }
-  if (d.addfor) { S.add = { t: d.addfor, extra: null, choice: '', day: S.add.day || Core.today(), q: '' }; S.tab = 'add'; render(); window.scrollTo(0, 0); return; }
+  if (d.addfor) { S.add = { t: d.addfor, extra: null, choice: '', day: S.add.day || Core.today(), q: '', basket: [] }; S.tab = 'add'; render(); window.scrollTo(0, 0); return; }
   if (d.pick) { S.add.t = d.pick; render(); return; }
   if (d.extra) { S.add.extra = d.extra; S.add.choice = ''; render(); return; }
   if (d.choice) { S.add.choice = d.choice; render(); return; }
@@ -361,14 +370,16 @@ document.addEventListener('click', e => {
   if (d.mtype) { keepMoney(); S.money.type = d.mtype; render(); return; }
   if (d.mcur) { keepMoney(); S.money.cur = d.mcur; render(); return; }
   if (d.day !== undefined) { S.totDay = d.day; render(); return; }
+  if (d.unbasket !== undefined) { S.add.basket.splice(+d.unbasket, 1); render(); return; }
   if (d.cancel) {
     const en = entries().find(x => x.id === d.cancel);
     if (en && confirm('Cancel this entry? It stays visible, crossed out.')) { queueCancel(d.cancel); toast('Cancelled'); }
     return;
   }
   const a = d.act;
-  if (a === 'unpick') { S.add.t = null; S.add.q = ''; S.add.focus = true; render(); }
+  if (a === 'unpick') { S.add.t = null; S.add.q = ''; S.add.basket = []; S.add.focus = true; render(); }
   if (a === 'sell') sell();
+  if (a === 'toBasket') toBasket();
   if (a === 'saveMoney') saveMoney();
   if (a === 'closeMoney') { S.money = null; render(); }
   if (a === 'copyTot') copyTot();
@@ -385,14 +396,26 @@ function nowIso() {
   const d = new Date(), p = n => String(n).padStart(2, '0');
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
 }
+function currentItem() {
+  const t = S.data.trip, A = S.add, x = t.extras.find(z => z.name === A.extra);
+  if (!x || (x.choices.length && !A.choice)) return null;
+  return { extra: x.name, choice: A.choice, day: x.askDay ? A.day : '', price: Core.price(x, A.choice) };
+}
+function toBasket() {
+  const it = currentItem(); if (!it) return;
+  S.add.basket = (S.add.basket || []).concat([it]); S.add.extra = null; S.add.choice = ''; render();
+}
 function sell() {
-  const t = S.data.trip, A = S.add, x = t.extras.find(z => z.name === A.extra), tr = S.data.travellers.find(z => String(z.id) === String(A.t));
-  if (!x || !tr) return;
-  const price = Core.price(x, A.choice);
-  queueAdd({ id: Core.uid(), created: nowIso(), type: 'SALE', travellerId: tr.id, traveller: tr.name, extra: x.name, choice: A.choice,
-    day: x.askDay ? A.day : '', bus: S.data.session.bus, guide: S.data.session.guide, amount: price, currency: 'EUR', eur: price, status: 'OK' });
-  toast('Saved · ' + x.name + ' · ' + tr.name);
-  S.add = { t: null, extra: A.extra, choice: A.choice, day: A.day, q: '', focus: true }; render();
+  const A = S.add, tr = S.data.travellers.find(z => String(z.id) === String(A.t));
+  const items = (A.basket || []).concat(currentItem() ? [currentItem()] : []);
+  if (!tr || !items.length) return;
+  const now = nowIso();
+  items.forEach(it => S.queue.push({ op: 'add', entry: { id: Core.uid(), created: now, type: 'SALE', travellerId: tr.id, traveller: tr.name,
+    extra: it.extra, choice: it.choice, day: it.day, bus: S.data.session.bus, guide: S.data.session.guide, amount: it.price, currency: 'EUR', eur: it.price, status: 'OK' } }));
+  saveQueue(); sync();
+  const total = items.reduce((a, b) => a + b.price, 0);
+  toast('Saved · ' + items.length + ' extra' + (items.length > 1 ? 's' : '') + ' · ' + m(total) + ' · ' + tr.name);
+  S.add = { t: null, extra: null, choice: '', day: A.day, q: '', focus: true, basket: [] }; render();
 }
 function saveMoney() {
   keepMoney();
