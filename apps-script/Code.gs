@@ -69,6 +69,7 @@ function doGet() {
 function doPost(e) {
   try {
     const b = JSON.parse(e.postData.contents || '{}');
+    if (/^(g|o)_/.test(String(b.action))) return json_(guideApi_(b));
     switch (b.action) {
       case 'config': return json_(publicConfig_());
       case 'search': return json_(apiSearch(b.q));

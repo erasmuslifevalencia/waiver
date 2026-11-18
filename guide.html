@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#4A0A2A">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Erasmus Life · Guides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --plum:#8E1C55; --deep:#4A0A2A; --orange:#F07D1E; --osoft:#FFF1E4; --obrown:#6B3200; --green:#157A55; --gsoft:#E3F3EC; --gtext:#0F5E41;
+    --red:#7A1A1A; --rsoft:#FDECEC; --ink:#22121B; --muted:#6E5B66; --paper:#F8F4F6; --line:#E8DDE3; --display:'Josefin Sans',system-ui,sans-serif; --body:'Figtree',system-ui,sans-serif; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.45 var(--body); min-height: 100vh; display: flex; flex-direction: column; }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--deep); color: #fff; padding: calc(12px + env(safe-area-inset-top)) 16px 10px; }
+  .hrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; max-width: 640px; margin: 0 auto; }
+  .htitle { font: 700 20px/1.1 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+  .hsub { font-size: 13px; opacity: .85; }
+  .seg { display: flex; background: rgba(255,255,255,.16); border-radius: 999px; padding: 3px; }
+  .seg button { border: 0; background: none; color: #fff; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: #fff; color: var(--deep); }
+  .sync { max-width: 640px; margin: 8px auto 0; border-radius: 10px; padding: 6px 10px; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+  .sync.off { background: rgba(240,125,30,.25); }
+  .sync.pend { background: rgba(255,255,255,.12); }
+  main { flex: 1; width: 100%; max-width: 640px; margin: 0 auto; padding: 14px 14px 110px; }
+  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: #fff; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 6px 6px calc(10px + env(safe-area-inset-bottom)); }
+  nav.tabs button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  nav.tabs button[aria-current="page"] { color: var(--plum); }
+  .card { background: #fff; border-radius: 18px; padding: 14px 16px; }
+  .card + .card, .stack > * + * { margin-top: 10px; }
+  h2 { font: 700 20px/1.2 var(--display); margin: 4px 2px 10px; }
+  .lbl { display: block; font-size: 13px; font-weight: 600; margin: 14px 2px 6px; }
+  input[type=text], input[type=search], input[type=date], input[type=tel], input[inputmode] { width: 100%; padding: 12px 14px; font-size: 16px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; }
+  input:focus { border-color: var(--plum); outline: none; box-shadow: 0 0 0 3px rgba(142,28,85,.14); }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { border: 1.5px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 13px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .pill[aria-pressed="true"] { background: var(--plum); border-color: var(--plum); color: #fff; }
+  .busseg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: #EDE3E8; border-radius: 14px; padding: 4px; margin-bottom: 10px; }
+  .busseg button { border: 0; background: none; border-radius: 10px; padding: 9px 6px; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .busseg button[aria-pressed="true"] { background: #fff; color: var(--ink); font-weight: 700; }
+  .trav { background: #fff; border-radius: 16px; padding: 12px 14px; margin-top: 8px; }
+  .trow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .tname { font-weight: 700; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .chip { font-size: 12.5px; font-weight: 600; border-radius: 8px; padding: 3px 8px; }
+  .chip.b { background: var(--gsoft); color: var(--gtext); }
+  .chip.x { background: var(--osoft); color: var(--obrown); }
+  .chip.p { background: #EDE3E8; color: var(--muted); }
+  .addbtn { flex: none; width: 42px; height: 42px; border-radius: 12px; border: 0; background: var(--plum); color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 15px; font-size: 17px; font-weight: 700; background: var(--plum); color: #fff; cursor: pointer; margin-top: 16px; }
+  .btn.ghost { background: #fff; color: var(--plum); border: 1.5px solid var(--line); }
+  .btn.green { background: #fff; color: var(--gtext); border: 1.5px solid var(--green); }
+  .btn:disabled { opacity: .5; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .opt { text-align: left; border: 1.5px solid var(--line); background: #fff; border-radius: 14px; padding: 12px; cursor: pointer; }
+  .opt[aria-pressed="true"] { border: 2px solid var(--plum); background: #F7E8F0; }
+  .opt b { display: block; } .opt span { font-size: 14px; color: var(--muted); }
+  .big { font: 700 38px/1.1 var(--display); color: var(--plum); }
+  .box { border-radius: 12px; padding: 10px 12px; }
+  .box.in { background: var(--gsoft); color: var(--gtext); } .box.out { background: var(--rsoft); color: var(--red); }
+  .box b { display: block; font-size: 19px; }
+  .entry { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); align-items: center; }
+  .entry:first-child { border-top: 0; }
+  .entry small { display: block; color: var(--muted); font-size: 12.5px; }
+  .entry .amt { font-weight: 700; white-space: nowrap; text-align: right; }
+  .entry.cx { color: #A0909A; } .entry.cx .t, .entry.cx .amt { text-decoration: line-through; }
+  .link { background: none; border: 0; color: var(--plum); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 4px 0; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th { text-align: right; font-size: 12.5px; color: var(--muted); font-weight: 600; padding: 4px 0 6px; }
+  th:first-child, td:first-child { text-align: left; }
+  td { padding: 7px 0; border-top: 1px solid var(--line); text-align: right; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .err { color: #B42318; font-size: 14px; margin-top: 8px; }
+  .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 15px; z-index: 9; }
+  .login { max-width: 360px; margin: 10vh auto 0; text-align: center; padding: 0 20px; }
+  .login img { width: 110px; }
+  .login h1 { font: 700 26px/1.2 var(--display); text-transform: uppercase; margin: 16px 0 6px; }
+  .pin { text-align: center; font-size: 28px !important; letter-spacing: .3em; font-weight: 700; }
+  .picked { display: flex; justify-content: space-between; align-items: center; border: 1.5px solid var(--plum); border-radius: 14px; padding: 10px 14px; background: #fff; }
+  .results { border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 6px; background: #fff; }
+  .results button { display: block; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); background: #fff; padding: 12px 14px; cursor: pointer; }
+  .results button:first-child { border-top: 0; }
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login" hidden>
+  <img src="logo.png" alt="Erasmus Life">
+  <h1>Guide app</h1>
+  <p class="muted">Enter your personal code</p>
+  <input id="pinIn" class="pin" type="tel" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="Personal code">
+  <button class="btn" id="loginBtn">Open</button>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<div id="appView" hidden style="display:contents">
+  <header>
+    <div class="hrow">
+      <div><div class="htitle" id="hTitle"></div><div class="hsub" id="hSub"></div></div>
+      <div class="seg" id="curSeg" role="group" aria-label="Currency"></div>
+    </div>
+    <div class="sync" id="sync" hidden></div>
+  </header>
+  <main id="main"></main>
+  <nav class="tabs" aria-label="Sections">
+    <button data-tab="trav"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/></svg>Travellers</button>
+    <button data-tab="add"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add extra</button>
+    <button data-tab="cash"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cash</button>
+    <button data-tab="tot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Totals</button>
+  </nav>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="config.js?v=5"></script>
+<script src="app-core.js?v=1"></script>
+<script>
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+const S = { pin: store.get('g_pin', ''), data: null, queue: [], tab: 'trav', busView: null, cur: 'EUR', q: '', filter: '',
+  add: { t: null, extra: null, choice: '', day: Core.today(), q: '' }, money: null, totDay: '', syncing: false, online: navigator.onLine };
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2200); }
+function m(eur) { return Core.money(eur, S.data.trip, S.cur); }
+function mine(e) { return String(e.bus) === String(S.data.session.bus); }
+
+/* ---------- login & data ---------- */
+async function login(pin) {
+  $('loginErr').textContent = '';
+  try {
+    const r = await api('g_login', { pin });
+    if (!r.ok) { $('loginErr').textContent = r.error === 'pin' ? 'Wrong code.' : r.error === 'blocked' ? 'Too many tries, wait 10 minutes.' : 'This trip is closed.'; return; }
+    S.pin = pin; store.set('g_pin', pin); start();
+  } catch (e) { $('loginErr').textContent = 'No connection. You need internet the first time.'; }
+}
+function logout() { if (!confirm('Log out? Entries not yet synced stay on this phone.')) return; store.del('g_pin'); S.pin = ''; location.reload(); }
+
+function start() {
+  S.data = store.get('g_data_' + S.pin, null);
+  S.queue = store.get('g_queue_' + S.pin, []);
+  $('loginView').hidden = true; $('appView').hidden = false;
+  if (S.data) { initView(); render(); }
+  refresh();
+}
+function initView() {
+  if (!S.busView) S.busView = String(S.data.session.bus);
+  const t = S.data.trip;
+  $('hTitle').textContent = t.name + ' · Bus ' + S.data.session.bus;
+  $('hSub').textContent = S.data.session.guide + (t.dates ? ' · ' + t.dates : '');
+  $('curSeg').innerHTML = t.localCur && t.rate ? ['EUR', t.localCur].map(c =>
+    `<button data-cur="${c}" aria-pressed="${S.cur === c}">${c === 'EUR' ? '€' : esc(c)}</button>`).join('') : '';
+}
+async function refresh() {
+  await sync();
+  try {
+    const r = await api('g_data', { pin: S.pin });
+    if (!r.ok) { if (/pin|inactive/.test(r.error)) { store.del('g_pin'); location.reload(); } return; }
+    S.data = r; store.set('g_data_' + S.pin, r); S.online = true;
+    initView(); render();
+  } catch (e) { S.online = false; renderSync(); if (!S.data) $('main').innerHTML = '<div class="card">No connection and no saved data yet. Open the app once with internet.</div>'; }
+}
+
+/* ---------- offline queue ---------- */
+function saveQueue() { store.set('g_queue_' + S.pin, S.queue); renderSync(); }
+function queueAdd(entry) { S.queue.push({ op: 'add', entry }); saveQueue(); render(); sync(); }
+function queueCancel(id) {
+  const i = S.queue.findIndex(o => o.op === 'add' && o.entry.id === id);
+  if (i >= 0) S.queue.splice(i, 1); else S.queue.push({ op: 'cancel', id });
+  saveQueue(); render(); sync();
+}
+async function sync() {
+  if (S.syncing || !S.queue.length) return;
+  S.syncing = true;
+  try {
+    const adds = S.queue.filter(o => o.op === 'add').map(o => o.entry);
+    if (adds.length) {
+      const r = await api('g_add', { pin: S.pin, entries: adds });
+      if (r.ok) S.queue = S.queue.filter(o => !(o.op === 'add' && r.saved.indexOf(o.entry.id) >= 0));
+    }
+    for (const o of S.queue.filter(o => o.op === 'cancel')) {
+      const r = await api('g_cancel', { pin: S.pin, id: o.id });
+      if (r.ok || r.error === 'not found' || r.error === 'not yours') S.queue = S.queue.filter(x => x !== o);
+    }
+    S.online = true; saveQueue();
+    const r = await api('g_data', { pin: S.pin });
+    if (r.ok) { S.data = r; store.set('g_data_' + S.pin, r); render(); }
+  } catch (e) { S.online = false; renderSync(); }
+  finally { S.syncing = false; }
+}
+window.addEventListener('online', () => { S.online = true; sync(); refresh(); });
+window.addEventListener('offline', () => { S.online = false; renderSync(); });
+setInterval(() => { if (S.pin) sync(); }, 30000);
+
+/** Server entries + entries still waiting on this phone. */
+function entries() {
+  const cancels = S.queue.filter(o => o.op === 'cancel').map(o => o.id);
+  const server = (S.data ? S.data.entries : []).map(e => cancels.indexOf(e.id) >= 0 ? Object.assign({}, e, { status: 'CANCELLED', pending: true }) : e);
+  const local = S.queue.filter(o => o.op === 'add').map(o => Object.assign({}, o.entry, { pending: true }));
+  return server.concat(local);
+}
+
+/* ---------- render ---------- */
+function renderSync() {
+  const el = $('sync'), n = S.queue.length;
+  if (!S.online) { el.hidden = false; el.className = 'sync off'; el.textContent = 'No network' + (n ? ' · ' + n + ' entr' + (n > 1 ? 'ies' : 'y') + ' will sync later' : ' · showing saved data'); }
+  else if (n) { el.hidden = false; el.className = 'sync pend'; el.textContent = 'Syncing ' + n + ' entr' + (n > 1 ? 'ies' : 'y') + '…'; }
+  else el.hidden = true;
+}
+function render() {
+  if (!S.data) return;
+  renderSync();
+  document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === S.tab ? 'page' : 'false'));
+  $('main').innerHTML = { trav: vTrav, add: vAdd, cash: vCash, tot: vTot }[S.tab]();
+  if (S.tab === 'add' && S.add.focus) { const i = $('addQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } S.add.focus = false; }
+  if (S.tab === 'trav' && S.focusSearch) { const i = $('tq'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } S.focusSearch = false; }
+}
+
+function extrasOf(id, all) {
+  return all.filter(e => e.type === 'SALE' && e.status !== 'CANCELLED' && String(e.travellerId) === String(id));
+}
+function busSeg() {
+  const bs = S.data.trip.buses;
+  if (bs.length < 2) return '';
+  return '<div class="busseg" role="group" aria-label="Bus">' + bs.map(b =>
+    `<button data-bus="${esc(b.bus)}" aria-pressed="${S.busView === b.bus}">Bus ${esc(b.bus)}${b.bus === String(S.data.session.bus) ? ' · You' : b.guide ? ' · ' + esc(b.guide) : ''}</button>`).join('') + '</div>';
+}
+
+function vTrav() {
+  const all = entries(), t = S.data.trip;
+  const inBus = S.data.travellers.filter(x => x.bus === S.busView || (t.buses.length < 2));
+  const q = S.q.trim().toLowerCase();
+  const list = inBus.filter(x => (!q || x.name.toLowerCase().indexOf(q) >= 0) &&
+    (!S.filter || x.options.indexOf(S.filter) >= 0 || extrasOf(x.id, all).some(e => e.extra === S.filter)))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const filters = t.optionCols.concat(t.extras.map(x => x.name));
+  const count = f => inBus.filter(x => x.options.indexOf(f) >= 0 || extrasOf(x.id, all).some(e => e.extra === f)).length;
+  const own = S.busView === String(S.data.session.bus) || t.buses.length < 2;
+  return busSeg() +
+    `<label class="lbl" for="tq" style="margin-top:0">Search</label><input id="tq" type="search" placeholder="Name" value="${esc(S.q)}" autocomplete="off">` +
+    `<div class="pills" style="margin-top:10px"><button class="pill" data-filter="" aria-pressed="${!S.filter}">All ${inBus.length}</button>` +
+    filters.map(f => `<button class="pill" data-filter="${esc(f)}" aria-pressed="${S.filter === f}">${esc(f)} · ${count(f)}</button>`).join('') + '</div>' +
+    (list.length ? list.map(x => {
+      const ex = extrasOf(x.id, all);
+      return `<div class="trav"><div class="trow"><div class="tname">${esc(x.name)}</div>` +
+        (own ? `<button class="addbtn" data-addfor="${esc(x.id)}" aria-label="Add an extra for ${esc(x.name)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : '') + '</div>' +
+        `<div class="chips">${x.options.map(o => `<span class="chip b">${esc(o)}</span>`).join('')}` +
+        ex.map(e => `<span class="chip ${e.pending ? 'p' : 'x'}">${esc(e.extra)}${e.choice ? ' · ' + esc(e.choice) : ''}${e.day ? ' · ' + esc(Core.dayLabel(e.day)) : ''}</span>`).join('') +
+        (!x.options.length && !ex.length ? '<span class="muted">No options</span>' : '') + '</div></div>';
+    }).join('') : '<div class="card muted" style="margin-top:10px">Nobody matches.</div>');
+}
+
+function vAdd() {
+  const t = S.data.trip, A = S.add;
+  if (!t.extras.length) return '<div class="card">No extras set for this trip. The office adds them in the EXTRAS tab.</div>';
+  const mineT = S.data.travellers.filter(x => x.bus === String(S.data.session.bus) || t.buses.length < 2);
+  const tr = A.t && S.data.travellers.find(x => String(x.id) === String(A.t));
+  const x = A.extra && t.extras.find(z => z.name === A.extra);
+  let h = '<h2>Add an extra</h2><span class="lbl" style="margin-top:0">Traveller</span>';
+  if (tr) h += `<div class="picked"><b>${esc(tr.name)}</b><button class="link" data-act="unpick">Change</button></div>`;
+  else {
+    const q = A.q.trim().toLowerCase();
+    const res = q.length >= 2 ? mineT.filter(z => z.name.toLowerCase().indexOf(q) >= 0).slice(0, 6) : [];
+    h += `<input id="addQ" type="search" placeholder="Type a name" value="${esc(A.q)}" autocomplete="off">` +
+      (res.length ? '<div class="results">' + res.map(z => `<button data-pick="${esc(z.id)}">${esc(z.name)}</button>`).join('') + '</div>' : '');
+  }
+  h += '<span class="lbl">Extra</span><div class="grid2">' + t.extras.map(z =>
+    `<button class="opt" data-extra="${esc(z.name)}" aria-pressed="${A.extra === z.name}"><b>${esc(z.name)}</b><span>${m(z.price)}</span></button>`).join('') + '</div>';
+  if (x && x.choices.length) h += '<span class="lbl">Choice</span><div class="pills">' + x.choices.map(c =>
+    `<button class="pill" data-choice="${esc(c)}" aria-pressed="${A.choice === c}">${esc(c)}</button>`).join('') + '</div>';
+  if (x && x.askDay) h += `<label class="lbl" for="addDay">For which day</label><input id="addDay" type="date" value="${esc(A.day)}">`;
+  const ready = tr && x && (!x.choices.length || A.choice);
+  h += `<button class="btn" data-act="sell" ${ready ? '' : 'disabled'}>${x ? 'Cash received · ' + m(x.price) : 'Cash received'}</button>`;
+  return h;
+}
+
+function vCash() {
+  const t = S.data.trip, all = entries().filter(mine);
+  const c = Core.cash(all);
+  if (S.money) return vMoney();
+  const cur = Object.keys(c.byCur).filter(k => Math.abs(c.byCur[k]) > 0.001);
+  let h = `<div class="card"><div class="muted">Should be in your pocket</div><div class="big">${m(c.balance)}</div>` +
+    (cur.length > 1 || (cur[0] && cur[0] !== 'EUR') ? `<div class="muted">Counted by currency: ${cur.map(k => (Math.round(c.byCur[k] * 100) / 100).toLocaleString('en-GB') + ' ' + (k === 'EUR' ? '€' : esc(k))).join(' + ')}</div>` : '') +
+    `<div class="grid2" style="margin-top:12px"><div class="box in">Money in<b>+${m(c.sales + c.in)}</b><small>Extras ${m(c.sales)} · Other ${m(c.in)}</small></div>` +
+    `<div class="box out">Money out<b>−${m(c.out)}</b></div></div>` +
+    `<div class="grid2"><button class="btn green" data-money="IN">+ Money in</button><button class="btn" data-money="OUT">− Money out</button></div></div>`;
+  const list = all.slice().sort((a, b) => String(b.created).localeCompare(String(a.created)));
+  if (!list.length) return h + '<div class="card muted">No entries yet.</div>';
+  let day = '';
+  h += '<div class="card" style="margin-top:10px">';
+  list.forEach(e => {
+    const d = String(e.created).slice(0, 10);
+    if (d !== day) { day = d; h += `<div style="font:700 15px var(--display);margin:10px 0 2px">${esc(Core.dayLabel(d))}</div>`; }
+    const cx = e.status === 'CANCELLED';
+    const title = e.type === 'SALE' ? e.extra + (e.choice ? ' · ' + e.choice : '') + ' – ' + e.traveller : (e.description || (e.type === 'IN' ? 'Money in' : 'Money out')) + (e.party ? ' – ' + e.party : '');
+    const sign = e.type === 'OUT' ? '−' : '+';
+    const orig = e.currency && e.currency !== 'EUR' ? ' · ' + e.amount + ' ' + e.currency : '';
+    h += `<div class="entry ${cx ? 'cx' : ''}"><div><div class="t">${esc(title)}</div><small>${esc(String(e.created).slice(11, 16))} · ${e.type === 'SALE' ? 'Extra' : e.type === 'IN' ? 'In' : 'Out'}${esc(orig)}${e.pending ? ' · waiting to sync' : ''}${cx ? ' · cancelled' : ''}</small>` +
+      (!cx ? `<button class="link" data-cancel="${esc(e.id)}">Cancel</button>` : '') + `</div>` +
+      `<div class="amt" style="color:${cx ? 'inherit' : e.type === 'OUT' ? 'var(--red)' : 'var(--gtext)'}">${sign}${m(e.eur)}</div></div>`;
+  });
+  return h + '</div>';
+}
+
+function vMoney() {
+  const t = S.data.trip, M = S.money, local = t.localCur && t.rate;
+  return `<h2>${M.type === 'IN' ? 'Money in' : 'Money out'}</h2><div class="card">` +
+    `<div class="busseg" role="group" aria-label="Type"><button data-mtype="IN" aria-pressed="${M.type === 'IN'}">Money in</button><button data-mtype="OUT" aria-pressed="${M.type === 'OUT'}">Money out</button></div>` +
+    `<label class="lbl" for="mDesc" style="margin-top:4px">Description</label><input id="mDesc" type="text" value="${esc(M.desc)}" placeholder="${M.type === 'IN' ? 'e.g. Commission envelope' : 'e.g. 13 quads, both buses'}">` +
+    `<label class="lbl" for="mParty">${M.type === 'IN' ? 'Received from' : 'Paid to'}</label><input id="mParty" type="text" value="${esc(M.party)}">` +
+    `<label class="lbl" for="mAmt">Amount</label><div style="display:flex;gap:8px"><input id="mAmt" inputmode="decimal" value="${esc(M.amount)}" style="font-size:22px;font-weight:700">` +
+    (local ? `<div class="busseg" style="margin:0;flex:none" role="group" aria-label="Currency of the amount">${['EUR', t.localCur].map(c => `<button data-mcur="${c}" aria-pressed="${M.cur === c}">${c === 'EUR' ? '€' : esc(c)}</button>`).join('')}</div>` : '') + '</div>' +
+    (local && M.cur !== 'EUR' ? `<div class="muted" style="margin:6px 2px 0">1 € = ${t.rate} ${esc(t.localCur)}</div>` : '') +
+    `<div class="err" id="mErr"></div><button class="btn" data-act="saveMoney">Save</button><button class="btn ghost" data-act="closeMoney">Back</button></div>`;
+}
+
+function vTot() {
+  const t = S.data.trip, all = entries(), days = Core.days(t, all);
+  const buses = t.buses.map(b => b.bus);
+  const table = (title, rows, total) => `<div class="card"><div class="trow"><h2 style="margin:0">${esc(title)}</h2>${total != null ? `<b style="color:var(--plum);font-size:18px">${total}</b>` : ''}</div>` +
+    `<table><thead><tr><th></th>${buses.map(b => `<th>Bus ${esc(b)}</th>`).join('')}${buses.length > 1 ? '<th>Total</th>' : ''}</tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${esc(r.label)}</td>${buses.map(b => `<td>${r.per[b] || 0}</td>`).join('')}${buses.length > 1 ? `<td><b>${r.total}</b></td>` : ''}</tr>`).join('') + '</tbody></table></div>';
+  let h = '<div class="pills" style="margin-bottom:10px"><button class="pill" data-day="" aria-pressed="' + (!S.totDay) + '">All days</button>' +
+    days.map(d => `<button class="pill" data-day="${d}" aria-pressed="${S.totDay === d}">${esc(Core.dayLabel(d))}</button>`).join('') + '</div>';
+  const ex = Core.extraTotals(t, all, S.totDay);
+  h += ex.map(x => table(x.name, x.rows, x.total)).join('');
+  if (t.optionCols.length) h += table('Booked options', Core.optionTotals(t, S.data.travellers), null);
+  h += `<button class="btn ghost" data-act="copyTot">Copy to send by WhatsApp</button>`;
+  h += `<p class="muted" style="text-align:center;margin-top:20px">${esc(S.data.session.guide)} · <button class="link" data-act="logout">Log out</button></p>`;
+  return h;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.tab) { S.tab = d.tab; S.money = null; render(); window.scrollTo(0, 0); return; }
+  if (d.cur) { S.cur = d.cur; initView(); render(); return; }
+  if (d.bus) { S.busView = d.bus; render(); return; }
+  if (d.filter !== undefined) { S.filter = d.filter; render(); return; }
+  if (d.addfor) { S.add = { t: d.addfor, extra: null, choice: '', day: S.add.day || Core.today(), q: '' }; S.tab = 'add'; render(); window.scrollTo(0, 0); return; }
+  if (d.pick) { S.add.t = d.pick; render(); return; }
+  if (d.extra) { S.add.extra = d.extra; S.add.choice = ''; render(); return; }
+  if (d.choice) { S.add.choice = d.choice; render(); return; }
+  if (d.money) { S.money = { type: d.money, desc: '', party: '', amount: '', cur: 'EUR' }; render(); window.scrollTo(0, 0); return; }
+  if (d.mtype) { keepMoney(); S.money.type = d.mtype; render(); return; }
+  if (d.mcur) { keepMoney(); S.money.cur = d.mcur; render(); return; }
+  if (d.day !== undefined) { S.totDay = d.day; render(); return; }
+  if (d.cancel) {
+    const en = entries().find(x => x.id === d.cancel);
+    if (en && confirm('Cancel this entry? It stays visible, crossed out.')) { queueCancel(d.cancel); toast('Cancelled'); }
+    return;
+  }
+  const a = d.act;
+  if (a === 'unpick') { S.add.t = null; S.add.q = ''; S.add.focus = true; render(); }
+  if (a === 'sell') sell();
+  if (a === 'saveMoney') saveMoney();
+  if (a === 'closeMoney') { S.money = null; render(); }
+  if (a === 'copyTot') copyTot();
+  if (a === 'logout') logout();
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'tq') { S.q = e.target.value; S.focusSearch = true; render(); }
+  if (e.target.id === 'addQ') { S.add.q = e.target.value; S.add.focus = true; render(); }
+  if (e.target.id === 'addDay') S.add.day = e.target.value;
+});
+function keepMoney() { if (!$('mDesc')) return; S.money.desc = $('mDesc').value; S.money.party = $('mParty').value; S.money.amount = $('mAmt').value; }
+
+function nowIso() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+}
+function sell() {
+  const t = S.data.trip, A = S.add, x = t.extras.find(z => z.name === A.extra), tr = S.data.travellers.find(z => String(z.id) === String(A.t));
+  if (!x || !tr) return;
+  queueAdd({ id: Core.uid(), created: nowIso(), type: 'SALE', travellerId: tr.id, traveller: tr.name, extra: x.name, choice: A.choice,
+    day: x.askDay ? A.day : '', bus: S.data.session.bus, guide: S.data.session.guide, amount: x.price, currency: 'EUR', eur: x.price, status: 'OK' });
+  toast('Saved · ' + x.name + ' · ' + tr.name);
+  S.add = { t: null, extra: A.extra, choice: A.choice, day: A.day, q: '', focus: true }; render();
+}
+function saveMoney() {
+  keepMoney();
+  const t = S.data.trip, M = S.money, amt = parseFloat(String(M.amount).replace(',', '.'));
+  if (!M.desc.trim()) { $('mErr').textContent = 'Add a description.'; return; }
+  if (!(amt > 0)) { $('mErr').textContent = 'Enter an amount.'; return; }
+  const local = t.localCur && M.cur === t.localCur && t.rate;
+  queueAdd({ id: Core.uid(), created: nowIso(), type: M.type, description: M.desc.trim(), party: M.party.trim(), amount: amt,
+    currency: local ? t.localCur : 'EUR', eur: local ? Math.round(amt / t.rate * 100) / 100 : amt, bus: S.data.session.bus, guide: S.data.session.guide, status: 'OK' });
+  S.money = null; toast('Saved'); render();
+}
+async function copyTot() {
+  const t = S.data.trip, ex = Core.extraTotals(t, entries(), S.totDay);
+  let txt = t.name + (S.totDay ? ' – ' + Core.dayLabel(S.totDay) : '') + '\n';
+  ex.forEach(x => { if (!x.total) return; txt += '\n' + x.name + ': ' + x.total + '\n'; if (x.rows.length > 1) x.rows.forEach(r => { if (r.total) txt += '  ' + r.label + ': ' + r.total + '\n'; }); });
+  try { await navigator.clipboard.writeText(txt); toast('Copied'); } catch (e) { prompt('Copy this text:', txt); }
+}
+
+$('loginBtn').onclick = () => login($('pinIn').value.trim());
+$('pinIn').addEventListener('keydown', e => { if (e.key === 'Enter') login($('pinIn').value.trim()); });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (S.pin) start(); else { $('loginView').hidden = false; $('pinIn').focus(); }
+</script>
+</body>
+</html>

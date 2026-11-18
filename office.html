@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Erasmus Life · Trips office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --plum:#8E1C55; --deep:#4A0A2A; --ink:#22121B; --muted:#6E5B66; --paper:#F8F4F6; --line:#E8DDE3; --green:#0F5E41; --red:#7A1A1A; --display:'Josefin Sans',system-ui,sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 15px/1.45 'Figtree', system-ui, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid #F07D1E; outline-offset: 2px; }
+  header { background: linear-gradient(160deg, #A3215F 0%, var(--plum) 40%, var(--deep) 100%); color: #fff; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 14px 20px; }
+  .hrow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+  .hrow img { width: 52px; }
+  h1 { font: 700 22px/1.1 var(--display); text-transform: uppercase; margin: 0; }
+  .trips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .trips button { border: 0; background: rgba(255,255,255,.15); color: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 600; cursor: pointer; }
+  .trips button[aria-pressed="true"] { background: #fff; color: var(--deep); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .card { background: #fff; border-radius: 16px; padding: 16px 18px; }
+  h2 { font: 700 19px/1.2 var(--display); margin: 22px 0 10px; }
+  .big { font: 700 30px/1.1 var(--display); }
+  .muted { color: var(--muted); font-size: 13.5px; }
+  .row { display: flex; justify-content: space-between; gap: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 8px; border-bottom: 1px solid #F1EAEE; vertical-align: top; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  tr.cx td { color: #A0909A; text-decoration: line-through; }
+  .scroll { overflow-x: auto; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  select, .btn { border: 1.5px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+  .btn.main { background: var(--plum); color: #fff; border-color: var(--plum); font-weight: 600; }
+  .login { max-width: 360px; margin: 12vh auto; }
+  input { width: 100%; padding: 12px; border: 1.5px solid var(--line); border-radius: 10px; }
+  .err { color: #B42318; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header><div class="wrap hrow">
+  <div class="hrow" style="gap:12px"><img src="logo.png" alt="Erasmus Life"><h1>Trips · Office</h1></div>
+  <div class="trips" id="trips" role="group" aria-label="Trip"></div>
+</div></header>
+<div class="wrap" id="main"><p class="muted">Loading…</p></div>
+
+<div class="login card" id="login" hidden>
+  <label for="key"><b>Office key</b></label>
+  <input id="key" type="password" style="margin-top:8px">
+  <button class="btn main" id="go" style="margin-top:10px;width:100%">Open</button>
+  <div class="err" id="lerr"></div>
+</div>
+
+<script src="config.js?v=5"></script>
+<script src="app-core.js?v=1"></script>
+<script>
+const $ = id => document.getElementById(id);
+let KEY = decodeURIComponent(location.hash.slice(1)), TRIPS = [], TRIP = null, D = null, F = { bus: '', type: '' };
+const m = v => Core.money(v, D && D.trip, 'EUR');
+
+async function boot() {
+  try {
+    const r = await api('o_trips', { key: KEY });
+    if (!r.ok) throw new Error(r.error);
+    TRIPS = r.trips; $('login').hidden = true;
+    const first = TRIPS.find(t => t.active) || TRIPS[0];
+    renderTrips(); if (first) load(first.id);
+  } catch (e) { $('main').innerHTML = ''; $('login').hidden = false; $('lerr').textContent = KEY ? 'Wrong key or server error.' : ''; }
+}
+function renderTrips() {
+  $('trips').innerHTML = TRIPS.map(t => `<button data-trip="${esc(t.id)}" aria-pressed="${TRIP === t.id}">${esc(t.name)}${t.dates ? ' · ' + esc(t.dates) : ''}${t.active ? '' : ' (closed)'}</button>`).join('');
+}
+async function load(id) {
+  TRIP = id; renderTrips(); $('main').innerHTML = '<p class="muted">Loading…</p>';
+  try { const r = await api('o_data', { key: KEY, trip: id }); if (!r.ok) throw new Error(r.error); D = r; render(); }
+  catch (e) { $('main').innerHTML = '<div class="card">Could not load this trip: ' + esc(e.message) + '</div>'; }
+}
+function render() {
+  const t = D.trip, all = D.entries;
+  let h = '<h2>Cash by bus</h2><div class="grid">';
+  t.buses.forEach(b => {
+    const c = Core.cash(all.filter(e => String(e.bus) === b.bus));
+    const cur = Object.keys(c.byCur).filter(k => k !== 'EUR' && Math.abs(c.byCur[k]) > 0.001);
+    h += `<div class="card"><div class="row"><b>Bus ${esc(b.bus)}${b.colour ? ' · ' + esc(b.colour) : ''}</b><span class="muted">${esc(b.guide)}</span></div>
+      <div class="big" style="margin-top:6px">${m(c.balance)}</div><div class="muted">should be in the guide's pocket${cur.length ? ' (incl. ' + cur.map(k => c.byCur[k].toLocaleString('en-GB') + ' ' + esc(k)).join(', ') + ')' : ''}</div>
+      <div class="row" style="margin-top:10px"><span>Extras sold</span><b style="color:var(--green)">+${m(c.sales)}</b></div>
+      <div class="row"><span>Other money in</span><b style="color:var(--green)">+${m(c.in)}</b></div>
+      <div class="row"><span>Money out</span><b style="color:var(--red)">−${m(c.out)}</b></div></div>`;
+  });
+  const ct = Core.cash(all);
+  h += `<div class="card"><b>Whole trip</b><div class="big" style="margin-top:6px">${m(ct.balance)}</div><div class="muted">${D.travellers.length} travellers · ${all.filter(e => e.type === 'SALE' && e.status !== 'CANCELLED').length} extras sold</div>
+    <div class="row" style="margin-top:10px"><span>Money in</span><b style="color:var(--green)">+${m(ct.sales + ct.in)}</b></div><div class="row"><span>Money out</span><b style="color:var(--red)">−${m(ct.out)}</b></div></div></div>`;
+
+  const buses = t.buses.map(b => b.bus);
+  const table = (title, rows) => `<div class="card"><b>${esc(title)}</b><table style="margin-top:6px"><thead><tr><th></th>${buses.map(b => `<th class="n">Bus ${esc(b)}</th>`).join('')}<th class="n">Total</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${esc(r.label)}</td>${buses.map(b => `<td class="n">${r.per[b] || 0}</td>`).join('')}<td class="n"><b>${r.total}</b></td></tr>`).join('') + '</tbody></table></div>';
+  const ex = Core.extraTotals(t, all, '');
+  h += '<h2>Extras sold · all days</h2><div class="grid">' + (ex.length ? ex.map(x => table(x.name + ' · ' + x.total, x.rows)).join('') : '<div class="card muted">No extras set for this trip.</div>') + '</div>';
+  if (t.optionCols.length) h += '<h2>Booked options</h2><div class="grid">' + table('Options', Core.optionTotals(t, D.travellers)) + '</div>';
+
+  const list = all.filter(e => (!F.bus || String(e.bus) === F.bus) && (!F.type || e.type === F.type)).sort((a, b) => String(b.created).localeCompare(String(a.created)));
+  h += `<h2>All entries</h2><div class="tools">
+    <select id="fbus" aria-label="Bus"><option value="">All buses</option>${buses.map(b => `<option value="${esc(b)}" ${F.bus === b ? 'selected' : ''}>Bus ${esc(b)}</option>`).join('')}</select>
+    <select id="ftype" aria-label="Type"><option value="">All types</option>${[['SALE', 'Extras'], ['IN', 'Money in'], ['OUT', 'Money out']].map(([v, l]) => `<option value="${v}" ${F.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <button class="btn" id="csv">Download CSV</button><button class="btn" id="reload">Refresh</button></div>
+    <div class="card scroll"><table><thead><tr><th>When</th><th>Bus</th><th>Guide</th><th>Type</th><th>Traveller / description</th><th>Extra</th><th class="n">Amount</th><th class="n">€</th><th>Status</th></tr></thead><tbody>` +
+    (list.length ? list.map(e => `<tr class="${e.status === 'CANCELLED' ? 'cx' : ''}"><td>${esc(String(e.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(e.bus)}</td><td>${esc(e.guide)}</td><td>${e.type === 'SALE' ? 'Extra' : e.type === 'IN' ? 'In' : 'Out'}</td>
+      <td>${esc(e.type === 'SALE' ? e.traveller : e.description + (e.party ? ' – ' + e.party : ''))}</td><td>${esc(e.extra ? e.extra + (e.choice ? ' · ' + e.choice : '') + (e.day ? ' · ' + Core.dayLabel(e.day) : '') : '')}</td>
+      <td class="n">${e.type === 'OUT' ? '−' : '+'}${esc(e.amount)} ${esc(e.currency === 'EUR' ? '€' : e.currency)}</td><td class="n">${e.type === 'OUT' ? '−' : '+'}${m(e.eur)}</td><td>${e.status === 'CANCELLED' ? 'Cancelled ' + esc(e.cancelled) : 'OK'}</td></tr>`).join('')
+      : '<tr><td colspan="9" class="muted">No entries yet.</td></tr>') + '</tbody></table></div>';
+  $('main').innerHTML = h;
+  $('fbus').onchange = ev => { F.bus = ev.target.value; render(); };
+  $('ftype').onchange = ev => { F.type = ev.target.value; render(); };
+  $('reload').onclick = () => load(TRIP);
+  $('csv').onclick = () => csv(list);
+}
+function csv(list) {
+  const cols = ['created', 'bus', 'guide', 'type', 'traveller', 'extra', 'choice', 'day', 'description', 'party', 'amount', 'currency', 'eur', 'status'];
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const txt = cols.join(';') + '\n' + list.map(e => cols.map(c => q(e[c])).join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv' }));
+  a.download = (D.trip.name + '-cash.csv').replace(/\s+/g, '_'); a.click();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-trip]'); if (b) load(b.dataset.trip); });
+$('go').onclick = () => { KEY = $('key').value.trim(); location.hash = KEY; boot(); };
+boot();
+</script>
+</body>
+</html>
