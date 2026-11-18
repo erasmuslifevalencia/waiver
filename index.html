@@ -4,55 +4,59 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#2340C8">
+<meta name="theme-color" content="#8E1C55">
 <title>Erasmus Life · Morocco</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --cobalt: #2340C8; --cobalt-deep: #172C93; --saffron: #F4B21B; --saffron-soft: #FFF4D6;
-    --mint: #12805C; --mint-soft: #E2F3EC; --ink: #171A2B; --muted: #5B6178; --paper: #F5F6FB;
-    --line: #DCDFEA; --white: #fff; --err: #B42318;
-    --display: 'Bricolage Grotesque', system-ui, sans-serif; --body: 'Figtree', system-ui, sans-serif;
+    --plum: #8E1C55; --plum-deep: #4A0A2A; --orange: #F07D1E; --orange-soft: #FFF1E4;
+    --mint: #157A55; --mint-soft: #E3F3EC; --ink: #22121B; --muted: #6E5B66; --paper: #F8F4F6;
+    --line: #E8DDE3; --white: #fff; --err: #B42318;
+    --cobalt: var(--plum); --cobalt-deep: var(--plum-deep); --saffron: var(--orange); --saffron-soft: var(--orange-soft);
+    --display: 'Josefin Sans', system-ui, sans-serif; --body: 'Figtree', system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--body); }
   button, input { font: inherit; color: inherit; }
-  :focus-visible { outline: 3px solid var(--saffron); outline-offset: 2px; }
+  :focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
 
-  /* hero */
-  .hero { position: relative; color: var(--white); background-color: var(--cobalt);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.13' stroke-width='1.4'%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Crect x='18' y='18' width='28' height='28' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3Cpath d='M0 0l10 10M64 0L54 10M0 64l10-10M64 64L54 54'/%3E%3C/g%3E%3C/svg%3E");
-    padding: calc(18px + env(safe-area-inset-top)) 20px 64px; }
-  .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 28px; background: var(--paper);
-    -webkit-mask: radial-gradient(circle at 50% 0, transparent 13px, #000 13.5px) 0 0 / 34px 28px repeat-x;
-            mask: radial-gradient(circle at 50% 0, transparent 13px, #000 13.5px) 0 0 / 34px 28px repeat-x; }
+  /* hero: the logo's orange disc rising behind a plum sky */
+  .hero { position: relative; overflow: hidden; color: var(--white);
+    background: linear-gradient(160deg, #A3215F 0%, var(--plum) 35%, var(--plum-deep) 100%);
+    padding: calc(16px + env(safe-area-inset-top)) 20px 44px; }
+  .hero::before { content: ""; position: absolute; width: 330px; height: 330px; right: -90px; top: 40px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 30%, #F9B987 0%, var(--orange) 45%, #E0650F 100%); opacity: .95; }
+  .hero::after { content: ""; position: absolute; left: -10%; right: -10%; bottom: -2px; height: 54px; background: var(--paper);
+    clip-path: polygon(0 100%, 0 70%, 100% 0, 100% 100%); }
+  .top, .title { position: relative; z-index: 1; }
   .top { display: flex; justify-content: space-between; align-items: center; max-width: 520px; margin: 0 auto; }
-  .brand { font: 700 15px/1 var(--display); letter-spacing: .01em; }
-  .langs { display: flex; background: rgba(255,255,255,.14); border-radius: 999px; padding: 3px; }
+  .brand { display: block; width: 74px; height: auto; filter: drop-shadow(0 3px 8px rgba(0,0,0,.25)); }
+  .langs { display: flex; background: rgba(255,255,255,.16); border-radius: 999px; padding: 3px; }
   .langs button { border: 0; background: none; color: #fff; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .langs button[aria-pressed="true"] { background: #fff; color: var(--cobalt-deep); }
-  .title { max-width: 520px; margin: 34px auto 0; }
-  .title h1 { font: 800 clamp(52px, 17vw, 84px)/.9 var(--display); letter-spacing: -.035em; margin: 0; }
-  .title p { margin: 10px 0 0; font-size: 17px; opacity: .9; }
+  .langs button[aria-pressed="true"] { background: #fff; color: var(--plum); }
+  .title { max-width: 520px; margin: 30px auto 0; }
+  .title h1 { font: 700 clamp(42px, 13.5vw, 76px)/.9 var(--display); letter-spacing: .01em; text-transform: uppercase; margin: 0;
+    text-shadow: 0 4px 0 rgba(74,10,42,.55); }
+  .title p { margin: 12px 0 0; font-size: 17px; font-weight: 500; }
 
   /* content */
   main { max-width: 520px; margin: 0 auto; padding: 0 16px calc(48px + env(safe-area-inset-bottom)); position: relative; }
   .progress { display: flex; gap: 6px; margin: 22px 4px 16px; }
   .progress span { flex: 1; height: 4px; border-radius: 4px; background: var(--line); }
   .progress span.on { background: var(--cobalt); }
-  .panel { background: var(--white); border-radius: 20px; padding: 22px 20px; box-shadow: 0 1px 0 var(--line), 0 12px 32px -22px rgba(23,44,147,.45); }
+  .panel { background: var(--white); border-radius: 20px; padding: 22px 20px; box-shadow: 0 1px 0 var(--line), 0 14px 32px -22px rgba(74,10,42,.45); }
   .panel + .panel { margin-top: 14px; }
-  h2 { font: 700 24px/1.15 var(--display); letter-spacing: -.015em; margin: 0 0 6px; }
+  h2 { font: 700 24px/1.15 var(--display); letter-spacing: 0; margin: 0 0 6px; }
   .lead { color: var(--muted); margin: 0 0 18px; }
   .panel > label.f:first-child { margin-top: 0; }
   label.f { display: block; font-weight: 600; font-size: 14px; margin: 16px 0 6px; }
   input[type=text], input[type=date], input[type=search] { width: 100%; padding: 14px; font-size: 17px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; }
-  input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px rgba(35,64,200,.15); }
+  input:focus { border-color: var(--cobalt); outline: none; box-shadow: 0 0 0 3px rgba(142,28,85,.15); }
   .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
-  .btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 15px 18px; font-weight: 600; font-size: 17px; cursor: pointer; background: var(--cobalt); color: #fff; margin-top: 18px; text-align: center; text-decoration: none; }
+  .btn { display: block; letter-spacing: .01em; width: 100%; border: 0; border-radius: 14px; padding: 15px 18px; font-weight: 600; font-size: 17px; cursor: pointer; background: var(--cobalt); color: #fff; margin-top: 18px; text-align: center; text-decoration: none; }
   .btn:active { transform: translateY(1px); }
   .btn:disabled { opacity: .55; }
   .btn.ghost { background: transparent; color: var(--cobalt); border: 1.5px solid var(--line); }
@@ -67,7 +71,7 @@
   .results .empty { padding: 14px; color: var(--muted); font-size: 15px; }
 
   /* trip */
-  .who { font: 700 28px/1.1 var(--display); letter-spacing: -.02em; margin: 0 0 4px; }
+  .who { font: 700 28px/1.1 var(--display); letter-spacing: 0; margin: 0 0 4px; }
   .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 6px; }
   .fact { background: var(--paper); border-radius: 14px; padding: 12px 14px; }
   .fact small { display: block; color: var(--muted); font-size: 13px; }
@@ -92,7 +96,7 @@
   /* waiver */
   .badge { display: inline-block; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
   .badge.con { background: var(--mint-soft); color: var(--mint); }
-  .badge.sin { background: var(--saffron-soft); color: #8A5A00; }
+  .badge.sin { background: var(--orange-soft); color: #A54B00; }
   .text { max-height: 48vh; overflow: auto; border: 1.5px solid var(--line); border-radius: 14px; padding: 14px 16px; font-size: 14.5px; line-height: 1.55; background: #FCFCFE; }
   .text h4 { font: 700 15px/1.3 var(--display); margin: 0 0 10px; }
   .text p { margin: 0 0 10px; }
@@ -113,7 +117,7 @@
 <body>
 <header class="hero">
   <div class="top">
-    <div class="brand">Erasmus Life</div>
+    <img class="brand" src="logo.png" alt="Erasmus Life">
     <div class="langs" role="group" aria-label="Language">
       <button type="button" data-lang="en">EN</button><button type="button" data-lang="es">ES</button>
     </div>
@@ -209,7 +213,7 @@
   </section>
 </main>
 
-<script src="config.js?v=3"></script>
+<script src="config.js?v=4"></script>
 <script>
 const T = {
   en: {
