@@ -150,7 +150,7 @@ function start() {
   S.data = store.get('g_data_' + S.pin, null);
   S.queue = store.get('g_queue_' + S.pin, []);
   $('loginView').hidden = true; $('appView').hidden = false;
-  if (S.data) { initView(); render(); }
+  if (S.data) { initView(); render(); } else $('main').innerHTML = '<div class="card muted">Loading your trip…</div>';
   refresh();
 }
 function initView() {
@@ -243,8 +243,8 @@ function vTrav() {
   const list = inBus.filter(x => (!q || x.name.toLowerCase().indexOf(q) >= 0) &&
     (!S.filter || x.options.indexOf(S.filter) >= 0 || extrasOf(x.id, all).some(e => e.extra === S.filter)))
     .sort((a, b) => a.name.localeCompare(b.name));
-  const filters = t.optionCols.concat(t.extras.map(x => x.name));
   const count = f => inBus.filter(x => x.options.indexOf(f) >= 0 || extrasOf(x.id, all).some(e => e.extra === f)).length;
+  const filters = t.optionCols.concat(t.extras.map(x => x.name)).filter(f => count(f) > 0 || S.filter === f);
   const own = S.busView === String(S.data.session.bus) || t.buses.length < 2;
   return busSeg() +
     `<label class="lbl" for="tq" style="margin-top:0">Search</label><input id="tq" type="search" placeholder="Name" value="${esc(S.q)}" autocomplete="off">` +

@@ -87,8 +87,8 @@ function guideApi_(b) {
 /* ------------------------------------------------------------------ */
 
 function gBook_() {
-  const id = PropertiesService.getScriptProperties().getProperty(G.PROP_SHEET);
-  if (!id) throw new Error('Run setupGuides() first');
+  let id = PropertiesService.getScriptProperties().getProperty(G.PROP_SHEET);
+  if (!id) { setupGuides(); id = PropertiesService.getScriptProperties().getProperty(G.PROP_SHEET); }
   return SpreadsheetApp.openById(id);
 }
 
