@@ -48,6 +48,8 @@ const CONFIG = {
   OVERRIDES: {},
 
   // Fake participants to try the flow. Empty this list before going live.
+  // Fake participants for testing, e.g. { enr: 'TEST1', name: 'Jane Doe', insurances: [], options: [],
+  //   testInfo: { passport: 'X1234567', dob: '01/01/2000', bus: '1', phone: '', departure: '' } }
   TEST_PARTICIPANTS: [],
 
   MAX_ATTEMPTS: 5,       // wrong passport attempts per participant before a 15 min block
@@ -75,6 +77,7 @@ function doPost(e) {
       case 'search': return json_(apiSearch(b.q));
       case 'verify': return json_(apiVerify(b.enr, b.passport));
       case 'submit': return json_(apiSubmit(b.token, b.form));
+      case 'download': return json_(apiDownload(b.token));
       case 'adminList': return json_(apiAdminList(b.key));
       case 'adminReset': return json_(apiAdminReset(b.key, b.enr));
       default: return json_({ ok: false, error: 'unknown action' });
@@ -164,7 +167,7 @@ function apiVerify(enr, passport) {
     token: token,
     trip: tripView_(p, info, new Date()),
     signing: {
-      open: CONFIG.SIGNING_OPEN,
+      open: signingOpenFor_(enr),
       signedAt: signed ? signed.at : '',
       needsResign: !!(signed && signed.version !== version),
       version: version,
@@ -190,12 +193,29 @@ function tripView_(p, info, now) {
   };
 }
 
+/** Signing is open for everybody once SIGNING_OPEN is true; test participants (Enr "TEST…") can always sign. */
+function signingOpenFor_(enr) {
+  return CONFIG.SIGNING_OPEN || /^TEST/.test(String(enr));
+}
+
+/** The participant's own signed PDF (needs a session opened with their passport number). */
+function apiDownload(token) {
+  const raw = CacheService.getScriptCache().get('tok_' + token);
+  if (!raw) return { ok: false, error: 'expired' };
+  const signed = getSignedMap_()[JSON.parse(raw).enr];
+  if (!signed || !signed.pdf) return { ok: false, error: 'notfound' };
+  const m = String(signed.pdf).match(/[-\w]{25,}/);
+  if (!m) return { ok: false, error: 'notfound' };
+  const file = DriveApp.getFileById(m[0]);
+  return { ok: true, pdf: Utilities.base64Encode(file.getBlob().getBytes()), fileName: file.getName() };
+}
+
 function apiSubmit(token, form) {
-  if (!CONFIG.SIGNING_OPEN) return { ok: false, error: 'closed' };
   const cache = CacheService.getScriptCache();
   const raw = cache.get('tok_' + token);
   if (!raw) return { ok: false, error: 'expired' };
   const sess = JSON.parse(raw);
+  if (!signingOpenFor_(sess.enr)) return { ok: false, error: 'closed' };
 
   const err = validateForm_(form);
   if (err) return { ok: false, error: err };
@@ -215,8 +235,9 @@ function apiSubmit(token, form) {
       form.fullName.trim(), form.dob, "'" + form.passport.trim().toUpperCase(),
       form.lang, 'PASSPORT', file.getUrl(), 'VALID',
     ]);
-    cache.remove('tok_' + token);
-    return { ok: true, signedAt: Utilities.formatDate(now, 'Europe/Madrid', 'dd/MM/yyyy HH:mm') };
+    // The session stays valid (30 min) so the participant can download the PDF again; signing twice is blocked above.
+    return { ok: true, signedAt: Utilities.formatDate(now, 'Europe/Madrid', 'dd/MM/yyyy HH:mm'),
+      pdf: Utilities.base64Encode(pdf.getBytes()), fileName: pdf.getName() };
   } finally {
     lock.releaseLock();
   }
@@ -347,6 +368,7 @@ function parseInfo_(values) {
 
 /** Personal-info row of a participant: manual phone override first, otherwise fuzzy name match. */
 function infoFor_(p, info) {
+  if (p.testInfo) return p.testInfo;
   if (p.phone) {
     const d = p.phone.replace(/\D/g, '');
     const hit = info.find(r => r.phone.replace(/\D/g, '') === d);
