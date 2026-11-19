@@ -246,7 +246,7 @@ const T = {
     signHint: 'Sign with your finger', clear: 'Clear', accept: 'I have read and accept this declaration.',
     signBtn: 'Sign the waiver', backTrip: 'Back to my trip',
     doneTitle: 'Waiver signed', doneLead: 'Thank you. See you on board!',
-    dlBtn: 'Download my waiver (PDF)', dlHelp: 'Keep a copy on your phone. You can download it again later with your passport number.',
+    dlBtn: 'Download my waiver (PDF)', dlWait: 'Preparing your PDF…', dlHelp: 'Keep a copy on your phone. You can download it again later with your passport number.',
     err: {
       blocked: 'Too many attempts. Try again in 15 minutes or ask the staff.',
       passport: 'This passport number doesn’t match our records.',
@@ -285,7 +285,7 @@ const T = {
     signHint: 'Firma con el dedo', clear: 'Borrar', accept: 'He leído y acepto esta declaración.',
     signBtn: 'Firmar el descargo', backTrip: 'Volver a mi viaje',
     doneTitle: 'Descargo firmado', doneLead: 'Gracias. ¡Nos vemos en el bus!',
-    dlBtn: 'Descargar mi descargo (PDF)', dlHelp: 'Guarda una copia en tu móvil. Puedes volver a descargarlo más tarde con tu número de pasaporte.',
+    dlBtn: 'Descargar mi descargo (PDF)', dlWait: 'Preparando tu PDF…', dlHelp: 'Guarda una copia en tu móvil. Puedes volver a descargarlo más tarde con tu número de pasaporte.',
     err: {
       blocked: 'Demasiados intentos. Vuelve a probar en 15 minutos o pregunta al staff.',
       passport: 'Este número de pasaporte no coincide con nuestros datos.',
@@ -428,13 +428,13 @@ function savePdf(b64, name) {
 async function downloadWaiver(btn, errId) {
   $(errId).textContent = '';
   if (LAST_PDF) { savePdf(LAST_PDF.pdf, LAST_PDF.fileName); return; }
-  btn.disabled = true;
+  btn.disabled = true; const label = btn.textContent; btn.textContent = t('dlWait');
   try {
     const r = await api('download', { token: TOKEN });
     if (r.ok) { LAST_PDF = r; savePdf(r.pdf, r.fileName); }
     else { $(errId).textContent = errMsg(r.error); if (r.error === 'expired') setTimeout(restart, 2500); }
   } catch (e) { $(errId).textContent = errMsg('network'); }
-  finally { btn.disabled = false; }
+  finally { btn.disabled = false; btn.textContent = label; }
 }
 $('dl5').onclick = () => downloadWaiver($('dl5'), 'e5');
 
