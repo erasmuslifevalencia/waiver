@@ -12,7 +12,7 @@
 const G = {
   PROP_SHEET: 'GUIDES_SHEET_ID',
   TRIPS: 'TRIPS', BUSES: 'BUSES', EXTRAS: 'EXTRAS', CASH: 'CASH', ATTEND: 'ATTEND',
-  TRIPS_HDR: ['Trip ID', 'Name', 'Dates', 'Options sheet ID', 'Options tab', 'Header row', 'Option columns (comma separated)', 'Active (yes/no)', 'Local currency', 'Local currency per 1 €', 'Deposit € (empty = no deposit)'],
+  TRIPS_HDR: ['Trip ID', 'Name', 'Dates', 'Options sheet ID', 'Options tab', 'Header row', 'Option columns (comma separated)', 'Active (yes/no)', 'Local currency', 'Local currency per 1 €', 'Deposit buttons € (e.g. 20, 50 – empty = no deposit)'],
   BUSES_HDR: ['Trip ID', 'Bus', 'Colour', 'Guide', 'PIN (4–6 digits)'],
   EXTRAS_HDR: ['Trip ID', 'Extra', 'Price €', 'Choices (comma separated, own price with ":", e.g. Single:40, Double:60)', 'Ask for a day (yes/no)'],
   ATTEND_HDR: ['Trip ID', 'Bus', 'Date', 'List', 'Traveller ID', 'Traveller', 'Present', 'Group', 'Updated', 'By'],
@@ -108,8 +108,13 @@ function gTrips_() {
   return gRows_(G.TRIPS).map(r => ({
     id: r[0].trim(), name: r[1].trim(), dates: r[2].trim(), sheetId: r[3].trim(), tab: r[4].trim(),
     headerRow: parseInt(r[5], 10) || 1, optionDefs: optionDefs_(r[6]), active: yes_(r[7]),
-    localCur: r[8].trim(), rate: num_(r[9]), deposit: num_(r[10]),
-  }));
+    localCur: r[8].trim(), rate: num_(r[9]), depositAmounts: depAmounts_(r[10]),
+  })).map(t => Object.assign(t, { deposit: t.depositAmounts[0] || 0 }));
+}
+
+/** "20, 50" or "20 / 50" → [20, 50] (the buttons a guide taps when collecting deposits). */
+function depAmounts_(s) {
+  return String(s || '').split(/[,;\/|]/).map(x => num_(x)).filter(n => n > 0).slice(0, 4);
 }
 
 /** "Food pack, Seguro: Seguro Basic | Seguro Gold" → [{label:'Food pack', cols:['Food pack']}, {label:'Seguro', cols:[…]}] */
@@ -217,7 +222,7 @@ function gData_(s) {
     ok: true,
     session: s,
     trip: { id: t.id, name: t.name, dates: t.dates, buses: t.buses, extras: t.extras, optionCols: t.optionCols,
-      localCur: t.localCur, rate: t.rate, deposit: t.deposit },
+      localCur: t.localCur, rate: t.rate, deposit: t.deposit, depositAmounts: t.depositAmounts },
     travellers: gTravellers_(t),
     entries: gEntries_(t.id),
     attend: gAttend_(t.id, s.bus),

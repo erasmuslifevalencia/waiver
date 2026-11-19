@@ -448,7 +448,7 @@ function vDep() {
       `<p class="muted" style="margin:4px 2px">Usual deposit: ${m(t.deposit)}. Tap what the person really gave.</p>` +
       shown.map(x => { const p = P(x.id);
         return `<div class="prow"><div class="nm">${esc(x.name)}</div>` + (p.gave ? `<button class="dep" data-dundo="${esc(x.id)}" aria-label="${esc(x.name)} gave ${m(p.gave)}, tap to undo">${m(p.gave)}</button>`
-          : `<div class="amts"><button data-dgive="${esc(x.id)}" data-amt="${t.deposit}">${m(t.deposit)}</button><button data-dgive="${esc(x.id)}" data-amt="${t.deposit * 2}">${m(t.deposit * 2)}</button><button data-dgive="${esc(x.id)}" data-amt="other">Other</button></div>`) + '</div>'; }).join('') +
+          : `<div class="amts">${(t.depositAmounts && t.depositAmounts.length ? t.depositAmounts : [t.deposit]).map(v => `<button data-dgive="${esc(x.id)}" data-amt="${v}">${m(v)}</button>`).join('')}<button data-dgive="${esc(x.id)}" data-amt="other">Other</button></div>`) + '</div>'; }).join('') +
       (shown.length ? '<p class="note">Tap a paid amount to undo it.</p>' : '<div class="card muted" style="margin-top:8px">Everybody paid.</div>');
   }
   if (D.step === 1) {
