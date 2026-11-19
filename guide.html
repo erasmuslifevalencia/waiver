@@ -91,6 +91,32 @@
   .results { border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 6px; background: #fff; }
   .results button { display: block; width: 100%; text-align: left; border: 0; border-top: 1px solid var(--line); background: #fff; padding: 12px 14px; cursor: pointer; }
   .results button:first-child { border-top: 0; }
+  nav.tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .legend { background: #fff; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; }
+  .legend .chips { margin-top: 6px; }
+  .sec { font-size: 13px; font-weight: 700; color: var(--muted); margin: 16px 4px 6px; }
+  .lrow { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: #fff; border: 0; border-radius: 16px; padding: 13px 14px; margin-top: 8px; cursor: pointer; }
+  .lrow .nm { font-weight: 700; } .lrow .sub { font-size: 13px; color: var(--muted); }
+  .bar { height: 6px; border-radius: 9px; background: #EDE3E8; margin-top: 7px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--green); border-radius: 9px; }
+  .go { margin-left: auto; color: var(--muted); font-size: 22px; }
+  .counter { display: flex; gap: 8px; margin: 6px 0 10px; } .counter .box { flex: 1; border: 0; text-align: left; cursor: pointer; font: inherit; }
+  .prow { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 10px 12px; margin-top: 6px; }
+  .prow .nm { font-weight: 700; font-size: 15px; } .prow.here { background: #F3FAF6; }
+  .check { flex: none; margin-left: auto; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; background: #fff; cursor: pointer; }
+  .here .check { background: var(--green); border-color: var(--green); }
+  .gb { font-size: 12px; font-weight: 700; background: #EDE3E8; border-radius: 7px; padding: 2px 7px; }
+  .gseg { display: flex; gap: 4px; margin-left: auto; flex: none; }
+  .gseg button { width: 38px; height: 38px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; font-weight: 700; cursor: pointer; }
+  .gseg button[aria-pressed="true"] { background: var(--plum); border-color: var(--plum); color: #fff; }
+  .toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: #fff; border: 0; border-radius: 14px; padding: 10px 12px; margin: 8px 0 2px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .sw { width: 42px; height: 24px; border-radius: 99px; background: #D9CCD3; position: relative; flex: none; }
+  .sw::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; }
+  .sw.on { background: var(--plum); } .sw.on::after { left: auto; right: 3px; }
+  .tally { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 6px; }
+  .tally div { background: #fff; border-radius: 12px; padding: 8px 10px; font-size: 14px; } .tally b { font-size: 17px; }
+  .back { background: none; border: 0; font-size: 14px; font-weight: 600; color: var(--plum); margin: 0 2px 4px; padding: 4px 0; cursor: pointer; }
+  .note { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -116,6 +142,7 @@
   <nav class="tabs" aria-label="Sections">
     <button data-tab="trav"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 21v-3M16 21v-3"/></svg>Travellers</button>
     <button data-tab="add"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add extra</button>
+    <button data-tab="lists"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>Lists</button>
     <button data-tab="cash"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cash</button>
     <button data-tab="tot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Totals</button>
   </nav>
@@ -132,7 +159,8 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) {} },
 };
 const S = { pin: store.get('g_pin', ''), data: null, queue: [], tab: 'trav', busView: null, cur: 'EUR', q: '', filter: '',
-  add: { t: null, extra: null, choice: '', day: Core.today(), q: '' }, money: null, totDay: '', syncing: false, online: navigator.onLine };
+  add: { t: null, extra: null, choice: '', day: Core.today(), q: '' }, money: null, totDay: '', syncing: false, online: navigator.onLine,
+  att: {}, aq: [], L: { date: Core.today(), list: null, grp: 0, miss: false, edit: false, ng: 2 } };
 
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2200); }
 function m(eur) { return Core.money(eur, S.data.trip, S.cur); }
@@ -152,6 +180,7 @@ function logout() { if (!confirm('Log out? Entries not yet synced stay on this p
 function start() {
   S.data = store.get('g_data_' + S.pin, null);
   S.queue = store.get('g_queue_' + S.pin, []);
+  S.att = store.get('g_att_' + S.pin, {}); S.aq = store.get('g_aq_' + S.pin, []);
   $('loginView').hidden = true; $('appView').hidden = false;
   if (S.data) { initView(); render(); } else $('main').innerHTML = '<div class="card muted">Loading your trip…</div>';
   refresh();
@@ -169,7 +198,7 @@ async function refresh() {
   try {
     const r = await api('g_data', { pin: S.pin });
     if (!r.ok) { if (/pin|inactive/.test(r.error)) { store.del('g_pin'); location.reload(); } return; }
-    S.data = r; store.set('g_data_' + S.pin, r); S.online = true;
+    S.data = r; store.set('g_data_' + S.pin, r); S.online = true; mergeAtt(r.attend);
     initView(); render();
   } catch (e) { S.online = false; renderSync(); if (!S.data) $('main').innerHTML = '<div class="card">No connection and no saved data yet. Open the app once with internet.</div>'; }
 }
@@ -183,7 +212,7 @@ function queueCancel(id) {
   saveQueue(); render(); sync();
 }
 async function sync() {
-  if (S.syncing || !S.queue.length) return;
+  if (S.syncing || (!S.queue.length && !S.aq.length)) return;
   S.syncing = true;
   try {
     const adds = S.queue.filter(o => o.op === 'add').map(o => o.entry);
@@ -195,9 +224,14 @@ async function sync() {
       const r = await api('g_cancel', { pin: S.pin, id: o.id });
       if (r.ok || r.error === 'not found' || r.error === 'not yours') S.queue = S.queue.filter(x => x !== o);
     }
+    if (S.aq.length) {
+      const sent = S.aq.slice(0, 500).map(k => { const p = k.split('|'), a = S.att[k] || {}; return { k, d: p[0], l: p[1], t: p[2], n: a.n || '', p: a.p ? 1 : 0, g: a.g || 0, ts: a.ts }; });
+      const r = await api('g_marks', { pin: S.pin, marks: sent });
+      if (r.ok) { sent.forEach(m => { if (S.att[m.k] && S.att[m.k].ts === m.ts) S.aq = S.aq.filter(k => k !== m.k); }); saveAtt(); }
+    }
     S.online = true; saveQueue();
     const r = await api('g_data', { pin: S.pin });
-    if (r.ok) { S.data = r; store.set('g_data_' + S.pin, r); render(); }
+    if (r.ok) { S.data = r; store.set('g_data_' + S.pin, r); mergeAtt(r.attend); render(); }
   } catch (e) { S.online = false; renderSync(); }
   finally { S.syncing = false; }
 }
@@ -215,16 +249,17 @@ function entries() {
 
 /* ---------- render ---------- */
 function renderSync() {
-  const el = $('sync'), n = S.queue.length;
-  if (!S.online) { el.hidden = false; el.className = 'sync off'; el.textContent = 'No network' + (n ? ' · ' + n + ' entr' + (n > 1 ? 'ies' : 'y') + ' will sync later' : ' · showing saved data'); }
-  else if (n) { el.hidden = false; el.className = 'sync pend'; el.textContent = 'Syncing ' + n + ' entr' + (n > 1 ? 'ies' : 'y') + '…'; }
+  const el = $('sync'), n = S.queue.length, k = S.aq.length;
+  const what = [n ? n + ' entr' + (n > 1 ? 'ies' : 'y') : '', k ? k + ' tick' + (k > 1 ? 's' : '') : ''].filter(Boolean).join(' + ');
+  if (!S.online) { el.hidden = false; el.className = 'sync off'; el.textContent = 'No network' + (what ? ' · ' + what + ' will sync later' : ' · showing saved data'); }
+  else if (what) { el.hidden = false; el.className = 'sync pend'; el.textContent = 'Syncing ' + what + '…'; }
   else el.hidden = true;
 }
 function render() {
   if (!S.data) return;
   renderSync();
   document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === S.tab ? 'page' : 'false'));
-  $('main').innerHTML = { trav: vTrav, add: vAdd, cash: vCash, tot: vTot }[S.tab]();
+  $('main').innerHTML = { trav: vTrav, add: vAdd, lists: vLists, cash: vCash, tot: vTot }[S.tab]();
   if (S.tab === 'add' && S.add.focus) { const i = $('addQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } S.add.focus = false; }
   if (S.tab === 'trav' && S.focusSearch) { const i = $('tq'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } S.focusSearch = false; }
 }
@@ -254,6 +289,7 @@ function vTrav() {
     .filter(f => count(f) > 0 || K(S.filter) === K(f));
   const own = S.busView === String(S.data.session.bus) || t.buses.length < 2;
   return busSeg() +
+    `<div class="legend"><b>Colours</b><div class="chips"><span class="chip b">Booked at office</span><span class="chip x">Sold in bus (cash)</span><span class="chip p">Waiting to send</span><span class="chip n">Not bought</span></div></div>` +
     `<label class="lbl" for="tq" style="margin-top:0">Search</label><input id="tq" type="search" placeholder="Name" value="${esc(S.q)}" autocomplete="off">` +
     `<div class="pills" style="margin-top:10px"><button class="pill" data-filter="" aria-pressed="${!S.filter}">All ${inBus.length}</button>` +
     filters.map(f => `<button class="pill" data-filter="${esc(f)}" aria-pressed="${K(S.filter) === K(f)}">${esc(f)} · ${count(f)}</button>`).join('') + '</div>' +
@@ -267,6 +303,107 @@ function vTrav() {
         ex.map(e => `<span class="chip ${e.pending ? 'p' : 'x'}">${esc(e.extra)}${e.choice ? ' · ' + esc(e.choice) : ''}${e.day ? ' · ' + esc(Core.dayLabel(e.day)) : ''}</span>`).join('') +
         '</div></div>';
     }).join('') : '<div class="card muted" style="margin-top:10px">Nobody matches.</div>');
+}
+
+/* ---------- attendance lists ---------- */
+const LK = v => String(v || '').trim().toLowerCase();
+const NO_LIST = /seguro|insurance|sim/i;
+function saveAtt() { store.set('g_att_' + S.pin, S.att); store.set('g_aq_' + S.pin, S.aq); }
+function mergeAtt(list) {
+  (list || []).forEach(m => {
+    const k = m.d + '|' + m.l + '|' + m.t, cur = S.att[k];
+    if (S.aq.indexOf(k) >= 0) return;
+    if (!cur || (m.ts || 0) >= (cur.ts || 0)) S.att[k] = { p: m.p, g: m.g, ts: m.ts, n: cur && cur.n };
+  });
+  saveAtt();
+}
+let markTimer = null;
+function setMark(list, x, patch) {
+  const k = S.L.date + '|' + list + '|' + x.id, cur = S.att[k] || { p: 0, g: 0 };
+  S.att[k] = Object.assign({}, cur, patch, { n: x.name, ts: Date.now() });
+  if (S.aq.indexOf(k) < 0) S.aq.push(k);
+  saveAtt(); render();
+  clearTimeout(markTimer); markTimer = setTimeout(sync, 2500);
+}
+function markOf(list, x) { return S.att[S.L.date + '|' + list + '|' + x.id] || { p: 0, g: 0 }; }
+/** Lists available on a day: booked options, then extras sold, with the travellers of my bus in each. */
+function listsFor(date) {
+  const t = S.data.trip, all = entries(), out = [], seen = {};
+  const mineT = S.data.travellers.filter(x => x.bus === String(S.data.session.bus) || t.buses.length < 2);
+  const add = (label, booked) => {
+    if (seen[LK(label)] || NO_LIST.test(label)) return; seen[LK(label)] = 1;
+    const members = [];
+    mineT.forEach(x => {
+      const has = x.options.some(o => LK(o) === LK(label));
+      const sales = extrasOf(x.id, all).filter(e => LK(e.extra) === LK(label) && (!e.day || e.day === date));
+      if (has || sales.length) members.push({ x, choice: sales.map(e => e.choice).filter(Boolean).join(' + ') || (x.detail && x.detail[label]) || '' });
+    });
+    if (members.length) out.push({ label, booked, members: members.sort((a, b) => a.x.name.localeCompare(b.x.name)) });
+  };
+  t.optionCols.forEach(o => add(o, true));
+  t.extras.forEach(x => add(x.name, false));
+  return out;
+}
+function listDays() {
+  const set = {}, base = new Date(Core.today() + 'T12:00:00');
+  for (let i = -2; i <= 1; i++) { const d = new Date(base); d.setDate(d.getDate() + i); set[d.toISOString().slice(0, 10)] = 1; }
+  Object.keys(S.att).forEach(k => { set[k.slice(0, 10)] = 1; });
+  set[S.L.date] = 1;
+  return Object.keys(set).sort();
+}
+function vLists() {
+  const L = S.L, lists = listsFor(L.date);
+  const cur = L.list && lists.find(z => z.label === L.list);
+  if (cur) return L.edit ? vGroups(cur) : vList(cur);
+  L.list = null;
+  const days = listDays();
+  let h = '<div class="pills">' + days.map(d => `<button class="pill" data-ldate="${d}" aria-pressed="${L.date === d}">${esc(Core.dayLabel(d))}${d === Core.today() ? ' · today' : ''}</button>`).join('') + '</div>';
+  const row = z => { const n = z.members.filter(m => markOf(z.label, m.x).p).length, gs = new Set(z.members.map(m => markOf(z.label, m.x).g).filter(Boolean)).size;
+    return `<button class="lrow" data-lopen="${esc(z.label)}"><div style="flex:1"><div class="nm">${esc(z.label)}</div><div class="sub">${n} of ${z.members.length} checked${gs ? ' · ' + gs + ' group' + (gs > 1 ? 's' : '') : ''}</div><div class="bar"><i style="width:${Math.round(n / z.members.length * 100)}%"></i></div></div><span class="go" aria-hidden="true">›</span></button>`; };
+  const bk = lists.filter(z => z.booked), sd = lists.filter(z => !z.booked);
+  if (bk.length) h += '<div class="sec">Booked at the office</div>' + bk.map(row).join('');
+  if (sd.length) h += '<div class="sec">Sold in the bus</div>' + sd.map(row).join('');
+  if (!lists.length) h += '<div class="card muted" style="margin-top:10px">No list for this day.</div>';
+  return h + '<p class="note">Lists show your bus only. They work without network and are saved online when you have signal.</p>';
+}
+function vList(z) {
+  const L = S.L, ms = z.members, food = /lunch|dinner|breakfast|food|meal/i.test(z.label);
+  const word = food ? ['ate', 'not yet'] : ['here', 'missing'];
+  const ng = Math.max(0, ...ms.map(m => markOf(z.label, m.x).g || 0));
+  if (L.grp > ng) L.grp = 0;
+  const inG = ms.filter(m => !L.grp || (L.grp === -1 ? !markOf(z.label, m.x).g : markOf(z.label, m.x).g === L.grp));
+  const here = inG.filter(m => markOf(z.label, m.x).p).length;
+  const shown = L.miss ? inG.filter(m => !markOf(z.label, m.x).p) : inG;
+  let h = `<button class="back" data-lback="1">‹ All lists</button><h2 style="margin-top:0">${esc(z.label)} · ${esc(Core.dayLabel(L.date))}</h2>` +
+    `<div class="counter"><div class="box in"><b>${here} ${word[0]}</b>of ${inG.length}</div><button class="box out" data-act="lmiss"><b>${inG.length - here} ${word[1]}</b>${L.miss ? 'show everyone' : 'tap to see who'}</button></div>`;
+  const choices = {};
+  inG.forEach(m => { if (m.choice) m.choice.split(' + ').forEach(c => { choices[c] = choices[c] || [0, 0]; choices[c][0]++; if (markOf(z.label, m.x).p) choices[c][1]++; }); });
+  if (Object.keys(choices).length > 1 || food && Object.keys(choices).length) h += '<div class="tally">' + Object.keys(choices).sort().map(c => `<div>${esc(c)} <b>${choices[c][0]}</b> · ${choices[c][1]} ${word[0]}</div>`).join('') + '</div>';
+  if (ng) {
+    const cnt = g => ms.filter(m => (markOf(z.label, m.x).g || 0) === g);
+    h += `<div class="pills"><button class="pill" data-lgrp="0" aria-pressed="${!L.grp}">All ${ms.length}</button>` +
+      Array.from({ length: ng }, (_, i) => i + 1).map(g => { const c = cnt(g); return `<button class="pill" data-lgrp="${g}" aria-pressed="${L.grp === g}">Group ${g} · ${c.filter(m => markOf(z.label, m.x).p).length}/${c.length}</button>`; }).join('') +
+      (cnt(0).length ? `<button class="pill" data-lgrp="-1" aria-pressed="${L.grp === -1}">No group · ${cnt(0).length}</button>` : '') + '</div>';
+  }
+  h += `<button class="toggle" data-act="lmiss">Show ${word[1] === 'missing' ? 'missing' : 'not eaten'} only <span class="sw ${L.miss ? 'on' : ''}"></span></button>`;
+  h += shown.map(m => { const mk = markOf(z.label, m.x);
+    return `<div class="prow ${mk.p ? 'here' : ''}"><div><div class="nm">${esc(m.x.name)}</div>${m.choice || (mk.g && !L.grp) ? '<div class="chips" style="margin-top:3px">' + (m.choice ? `<span class="chip x">${esc(m.choice)}</span>` : '') + (mk.g && !L.grp ? `<span class="gb">G${mk.g}</span>` : '') + '</div>' : ''}</div>` +
+      `<button class="check" data-lmark="${esc(m.x.id)}" aria-pressed="${!!mk.p}" aria-label="${esc(m.x.name)} ${mk.p ? word[0] : word[1]}">${mk.p ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : ''}</button></div>`; }).join('');
+  if (!shown.length) h += `<div class="card muted" style="margin-top:8px">${L.miss ? 'Nobody ' + word[1] + '.' : 'Nobody in this group.'}</div>`;
+  h += `<button class="btn ghost" data-act="ledit">${ng ? 'Change groups' : 'Make groups'}</button>`;
+  if (ms.some(m => markOf(z.label, m.x).p)) h += `<p class="note"><button class="link" data-act="lreset">Untick everyone in this list</button></p>`;
+  return h;
+}
+function vGroups(z) {
+  const L = S.L, ms = z.members;
+  const ng = Math.max(L.ng, ...ms.map(m => markOf(z.label, m.x).g || 0));
+  const gs = Array.from({ length: ng }, (_, i) => i + 1);
+  return `<button class="back" data-act="ledone">‹ ${esc(z.label)} · ${esc(Core.dayLabel(L.date))}</button><h2 style="margin-top:0">Make groups</h2>` +
+    `<div class="pills">${gs.map(g => `<span class="pill">Group ${g} · ${ms.filter(m => markOf(z.label, m.x).g === g).length}</span>`).join('')}<button class="pill" data-act="laddg">+ Add a group</button></div>` +
+    `<p class="muted" style="margin:10px 2px 4px">Tap a number to put the person in that group. Tap it again to remove.</p>` +
+    ms.map(m => { const g = markOf(z.label, m.x).g || 0;
+      return `<div class="prow"><div><div class="nm">${esc(m.x.name)}</div>${m.choice ? `<span class="chip x">${esc(m.choice)}</span>` : ''}</div><div class="gseg">${gs.map(n => `<button data-lset="${esc(m.x.id)}" data-g="${n}" aria-pressed="${g === n}">${n}</button>`).join('')}</div></div>`; }).join('') +
+    `<button class="btn" data-act="ledone">Done</button>`;
 }
 
 function vAdd() {
@@ -362,7 +499,7 @@ function vTot() {
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const d = b.dataset;
-  if (d.tab) { S.tab = d.tab; S.money = null; render(); window.scrollTo(0, 0); return; }
+  if (d.tab) { if (d.tab === 'lists' && S.tab === 'lists') S.L.list = null; S.tab = d.tab; S.money = null; S.L.edit = false; render(); window.scrollTo(0, 0); return; }
   if (d.cur) { S.cur = d.cur; initView(); render(); return; }
   if (d.bus) { S.busView = d.bus; render(); return; }
   if (d.filter !== undefined) { S.filter = d.filter; render(); return; }
@@ -374,6 +511,16 @@ document.addEventListener('click', e => {
   if (d.mtype) { keepMoney(); S.money.type = d.mtype; render(); return; }
   if (d.mcur) { keepMoney(); S.money.cur = d.mcur; render(); return; }
   if (d.day !== undefined) { S.totDay = d.day; render(); return; }
+  if (d.ldate) { S.L.date = d.ldate; S.L.list = null; render(); return; }
+  if (d.lopen) { Object.assign(S.L, { list: d.lopen, grp: 0, miss: false, edit: false, ng: 2 }); render(); window.scrollTo(0, 0); return; }
+  if (d.lback) { S.L.list = null; render(); window.scrollTo(0, 0); return; }
+  if (d.lgrp !== undefined) { S.L.grp = +d.lgrp; render(); return; }
+  if (d.lmark || d.lset) {
+    const x = S.data.travellers.find(z => String(z.id) === String(d.lmark || d.lset)); if (!x) return;
+    if (d.lmark) setMark(S.L.list, x, { p: markOf(S.L.list, x).p ? 0 : 1 });
+    else { const g = +d.g; setMark(S.L.list, x, { g: markOf(S.L.list, x).g === g ? 0 : g }); }
+    return;
+  }
   if (d.unbasket !== undefined) { S.add.basket.splice(+d.unbasket, 1); render(); return; }
   if (d.cancel) {
     const en = entries().find(x => x.id === d.cancel);
@@ -388,6 +535,14 @@ document.addEventListener('click', e => {
   if (a === 'closeMoney') { S.money = null; render(); }
   if (a === 'copyTot') copyTot();
   if (a === 'logout') logout();
+  if (a === 'lmiss') { S.L.miss = !S.L.miss; render(); }
+  if (a === 'ledit') { S.L.edit = true; render(); window.scrollTo(0, 0); }
+  if (a === 'ledone') { S.L.edit = false; S.L.grp = 0; render(); window.scrollTo(0, 0); }
+  if (a === 'laddg') { const z = listsFor(S.L.date).find(y => y.label === S.L.list); S.L.ng = Math.max(S.L.ng, ...(z ? z.members.map(m => markOf(S.L.list, m.x).g || 0) : [0])) + 1; render(); }
+  if (a === 'lreset') {
+    const z = listsFor(S.L.date).find(y => y.label === S.L.list);
+    if (z && confirm('Untick everyone in ' + S.L.list + '? Groups stay.')) z.members.forEach(m => { if (markOf(S.L.list, m.x).p) setMark(S.L.list, m.x, { p: 0 }); });
+  }
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'tq') { S.q = e.target.value; S.focusSearch = true; render(); }

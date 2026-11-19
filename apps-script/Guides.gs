@@ -5,15 +5,17 @@
  *   BUSES   one row per bus    (trip, bus number, colour, guide name, guide PIN)
  *   EXTRAS  one row per extra  (trip, name, price in €, choices, ask for a day)
  *   CASH    filled by the app  (sales, money in, money out, cancellations)
+ *   ATTEND  filled by the app  (attendance lists: who is here / has eaten, sub-groups)
  * A trip's options sheet needs a "Name" column; a "Bus" column (1, 2…) is optional (no column = bus 1).
  */
 
 const G = {
   PROP_SHEET: 'GUIDES_SHEET_ID',
-  TRIPS: 'TRIPS', BUSES: 'BUSES', EXTRAS: 'EXTRAS', CASH: 'CASH',
+  TRIPS: 'TRIPS', BUSES: 'BUSES', EXTRAS: 'EXTRAS', CASH: 'CASH', ATTEND: 'ATTEND',
   TRIPS_HDR: ['Trip ID', 'Name', 'Dates', 'Options sheet ID', 'Options tab', 'Header row', 'Option columns (comma separated)', 'Active (yes/no)', 'Local currency', 'Local currency per 1 €'],
   BUSES_HDR: ['Trip ID', 'Bus', 'Colour', 'Guide', 'PIN (4–6 digits)'],
   EXTRAS_HDR: ['Trip ID', 'Extra', 'Price €', 'Choices (comma separated, own price with ":", e.g. Single:40, Double:60)', 'Ask for a day (yes/no)'],
+  ATTEND_HDR: ['Trip ID', 'Bus', 'Date', 'List', 'Traveller ID', 'Traveller', 'Present', 'Group', 'Updated', 'By'],
   CASH_HDR: ['Entry ID', 'Created', 'Trip ID', 'Bus', 'Guide', 'Type', 'Traveller ID', 'Traveller', 'Extra', 'Choice', 'For day', 'Description', 'Paid to / from', 'Amount', 'Currency', 'Amount €', 'Status', 'Cancelled'],
 };
 
@@ -75,6 +77,7 @@ function guideApi_(b) {
     case 'g_data': return gData_(gAuth_(b.pin));
     case 'g_add': return gAdd_(gAuth_(b.pin), b.entries || []);
     case 'g_cancel': return gCancel_(gAuth_(b.pin), b.id);
+    case 'g_marks': return gMarks_(gAuth_(b.pin), b.marks || []);
     case 'o_trips': checkAdmin_(b.key); return { ok: true, trips: gTrips_().map(t => ({ id: t.id, name: t.name, dates: t.dates, active: t.active })) };
     case 'o_data': checkAdmin_(b.key); return gData_({ trip: b.trip, bus: null, guide: 'Office' });
     default: return { ok: false, error: 'unknown action' };
@@ -217,6 +220,7 @@ function gData_(s) {
       localCur: t.localCur, rate: t.rate },
     travellers: gTravellers_(t),
     entries: gEntries_(t.id),
+    attend: gAttend_(t.id, s.bus),
     serverTime: Utilities.formatDate(new Date(), 'Europe/Madrid', "yyyy-MM-dd'T'HH:mm:ss"),
   };
 }
@@ -289,6 +293,66 @@ function gCancel_(s, id) {
       }
     }
     return { ok: false, error: 'not found' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Attendance lists (ATTEND tab)                                       */
+/* ------------------------------------------------------------------ */
+
+function gAttSheet_() {
+  const ss = gBook_();
+  let sh = ss.getSheetByName(G.ATTEND);
+  if (!sh) {
+    sh = ss.insertSheet(G.ATTEND);
+    sh.getRange(1, 1, 1000, G.ATTEND_HDR.length).setNumberFormat('@');
+    sh.getRange(1, 1, 1, G.ATTEND_HDR.length).setValues([G.ATTEND_HDR]).setFontWeight('bold').setBackground('#F3E6EE');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+/** Marks of a trip (one bus, or all buses when bus is null). */
+function gAttend_(tripId, bus) {
+  const sh = gBook_().getSheetByName(G.ATTEND);
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, G.ATTEND_HDR.length).getDisplayValues()
+    .filter(r => r[0] === tripId && (!bus || String(r[1]) === String(bus)))
+    .map(r => ({ d: r[2], l: r[3], t: r[4], p: r[6] === 'yes' ? 1 : 0, g: parseInt(r[7], 10) || 0, ts: Number(r[8]) || 0 }));
+}
+
+/** Saves the latest state of each mark (date + list + traveller). An older state never overwrites a newer one. */
+function gMarks_(s, marks) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = gAttSheet_();
+    const n = Math.max(sh.getLastRow() - 1, 0);
+    const v = n ? sh.getRange(2, 1, n, G.ATTEND_HDR.length).getDisplayValues() : [];
+    const idx = {};
+    v.forEach((r, i) => { idx[[r[0], r[1], r[2], r[3], r[4]].join('|')] = i; });
+    const clean = (x, max) => String(x == null ? '' : x).replace(/^[=+\-@]/, "'$&").slice(0, max);
+    const saved = [], add = [], upd = {};
+    marks.slice(0, 2000).forEach(m => {
+      const d = String(m.d || ''), l = clean(m.l, 60), t = clean(m.t, 40), ts = Number(m.ts) || 0;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !l || !t || !ts) return;
+      const row = [s.trip, String(s.bus), d, l, t, clean(m.n, 80), m.p ? 'yes' : '', String(Math.max(0, Math.min(20, parseInt(m.g, 10) || 0)) || ''),
+        String(ts), s.guide];
+      const key = row.slice(0, 5).join('|');
+      if (key in idx) {
+        const i = idx[key];
+        if ((Number(v[i][8]) || 0) <= ts) { v[i] = row; upd[i] = 1; }
+      } else { idx[key] = v.length + add.length; add.push(row); }
+      saved.push({ d: d, l: m.l, t: m.t, ts: ts });
+    });
+    Object.keys(upd).forEach(i => sh.getRange(Number(i) + 2, 1, 1, G.ATTEND_HDR.length).setValues([v[i]]));
+    if (add.length) {
+      const r0 = sh.getLastRow() + 1;
+      sh.getRange(r0, 1, add.length, G.ATTEND_HDR.length).setNumberFormat('@').setValues(add);
+    }
+    return { ok: true, saved: saved };
   } finally {
     lock.releaseLock();
   }

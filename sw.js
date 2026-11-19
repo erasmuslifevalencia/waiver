@@ -1,5 +1,5 @@
 // Offline support for the guide app: app files from cache, API always from the network.
-const CACHE = 'el-guides-v7';
+const CACHE = 'el-guides-v8';
 const SHELL = ['guide.html', 'office.html', 'config.js?v=5', 'app-core.js?v=2', 'logo.png', 'manifest.json', 'icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
