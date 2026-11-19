@@ -26,8 +26,12 @@ function waiverText_(version, lang, insurances) {
         'las actividades elegidas, y no estar bajo los efectos del alcohol ni de drogas. Si tomo medicación o tengo ' +
         'alguna condición médica relevante, he consultado a un médico y he informado a la Organización de lo necesario ' +
         'para mi seguridad.',
-      '5. Documentación. Soy responsable de viajar con un pasaporte válido y con los documentos exigidos para entrar ' +
-        'en Marruecos y regresar a España.',
+      '5. Documentación. Soy el/la único/a responsable de viajar con un pasaporte en vigor y con todos los documentos ' +
+        'exigidos según mi nacionalidad para entrar en Marruecos y para regresar a España (por ejemplo, visado, permiso ' +
+        'de residencia o TIE en vigor, o autorización de regreso), así como de comprobar estos requisitos antes del viaje. ' +
+        'Si se me deniega el embarque, la entrada en Marruecos o el regreso a España por no cumplirlos, la Organización ' +
+        'no será responsable, no tendré derecho a reembolso de la parte del viaje no disfrutada y correrán de mi cuenta ' +
+        'todos los gastos que se deriven (transporte, alojamiento, multas, nuevos billetes u otros).',
       version === 'CON'
         ? '6. Seguro. He contratado a través de la Organización el seguro de viaje ' + C.INSURER + ' (' + ins + '). ' +
           'Entiendo que la cobertura se rige exclusivamente por las condiciones de la póliza, que puedo solicitar a la ' +
@@ -68,8 +72,12 @@ function waiverText_(version, lang, insurances) {
     '4. Health. I declare that my physical and mental health is suitable for the trip and the activities I chose, and ' +
       'that I am not under the influence of alcohol or drugs. If I take medication or have a relevant medical ' +
       'condition, I have consulted a doctor and informed the Organiser of what is necessary for my safety.',
-    '5. Documents. I am responsible for travelling with a valid passport and the documents required to enter Morocco ' +
-      'and return to Spain.',
+    '5. Documents. I am solely responsible for travelling with a valid passport and all documents required for my ' +
+      'nationality to enter Morocco and to return to Spain (for example a visa, a valid residence permit/TIE or a return ' +
+      'authorisation), and for checking these requirements before the trip. If I am refused boarding, entry into Morocco ' +
+      'or return to Spain because I do not meet them, the Organiser is not liable, I am not entitled to a refund for the ' +
+      'unused part of the trip, and all resulting costs (transport, accommodation, fines, new tickets or others) are my ' +
+      'own responsibility.',
     version === 'CON'
       ? '6. Insurance. I have purchased through the Organiser the ' + C.INSURER + ' travel insurance (' + ins + '). ' +
         'I understand that coverage is governed exclusively by the policy conditions, which I can request from the ' +
