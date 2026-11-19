@@ -116,6 +116,16 @@
   .tally { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 6px; }
   .tally div { background: #fff; border-radius: 12px; padding: 8px 10px; font-size: 14px; } .tally b { font-size: 17px; }
   .back { background: none; border: 0; font-size: 14px; font-weight: 600; color: var(--plum); margin: 0 2px 4px; padding: 4px 0; cursor: pointer; }
+  .chip.d, .dep { background: #EFE6F7; color: #4B2A7A; }
+  .dep { font-size: 13px; font-weight: 700; border-radius: 9px; padding: 6px 10px; border: 0; margin-left: auto; cursor: pointer; }
+  .amts { display: flex; gap: 6px; margin-left: auto; flex: none; }
+  .amts button { border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: 14px; background: #fff; cursor: pointer; }
+  .okb { margin-left: auto; flex: none; border: 1.5px solid var(--green); color: var(--gtext); border-radius: 10px; padding: 8px 12px; font-weight: 700; font-size: 14px; background: #fff; cursor: pointer; }
+  .okb.owe { border-color: var(--red); color: var(--red); }
+  .done { margin-left: auto; flex: none; text-align: right; color: var(--gtext); font-weight: 700; font-size: 14px; }
+  .kept { background: var(--rsoft); color: var(--red); border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-top: 8px; }
+  .hline { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .hline:first-child { border-top: 0; }
   .note { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 12px; }
 </style>
 </head>
@@ -150,7 +160,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="config.js?v=5"></script>
-<script src="app-core.js?v=2"></script>
+<script src="app-core.js?v=3"></script>
 <script>
 const $ = id => document.getElementById(id);
 const store = {
@@ -160,7 +170,7 @@ const store = {
 };
 const S = { pin: store.get('g_pin', ''), data: null, queue: [], tab: 'trav', busView: null, cur: 'EUR', q: '', filter: '',
   add: { t: null, extra: null, choice: '', day: Core.today(), q: '' }, money: null, totDay: '', syncing: false, online: navigator.onLine,
-  att: {}, aq: [], L: { date: Core.today(), list: null, grp: 0, miss: false, edit: false, ng: 2 } };
+  D: { step: 0, miss: false, form: null }, att: {}, aq: [], L: { date: Core.today(), list: null, grp: 0, miss: false, edit: false, ng: 2 } };
 
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2200); }
 function m(eur) { return Core.money(eur, S.data.trip, S.cur); }
@@ -261,6 +271,7 @@ function render() {
   document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === S.tab ? 'page' : 'false'));
   $('main').innerHTML = { trav: vTrav, add: vAdd, lists: vLists, cash: vCash, tot: vTot }[S.tab]();
   if (S.tab === 'add' && S.add.focus) { const i = $('addQ'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } S.add.focus = false; }
+  if (S.D.focus) { const i = $(S.D.focus === true ? 'dQ' : S.D.focus); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } S.D.focus = false; }
   if (S.tab === 'trav' && S.focusSearch) { const i = $('tq'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } S.focusSearch = false; }
 }
 
@@ -288,8 +299,12 @@ function vTrav() {
     .filter(f => !seen[K(f)] && (seen[K(f)] = true))
     .filter(f => count(f) > 0 || K(S.filter) === K(f));
   const own = S.busView === String(S.data.session.bus) || t.buses.length < 2;
+  const dst = t.deposit ? Core.depState(all) : null;
+  const depChip = id => { const p = dst && dst.per[id]; if (!p) return '';
+    const txt = p.ret ? (+p.ret.eur < 0 ? 'Deposit · paid ' + m(-p.ret.eur) + ' extra' : 'Deposit given back') : p.gave ? 'Deposit ' + m(p.gave) + (p.kept ? ' · ' + m(p.kept) + ' kept' : '') : 'Deposit · ' + m(p.kept) + ' kept';
+    return `<span class="chip d">${esc(txt)}</span>`; };
   return busSeg() +
-    `<div class="legend"><b>Colours</b><div class="chips"><span class="chip b">Booked at office</span><span class="chip x">Sold in bus (cash)</span><span class="chip p">Waiting to send</span><span class="chip n">Not bought</span></div></div>` +
+    `<div class="legend"><b>Colours</b><div class="chips"><span class="chip b">Booked at office</span><span class="chip x">Sold in bus (cash)</span><span class="chip p">Waiting to send</span><span class="chip n">Not bought</span>${t.deposit ? '<span class="chip d">Deposit</span>' : ''}</div></div>` +
     `<label class="lbl" for="tq" style="margin-top:0">Search</label><input id="tq" type="search" placeholder="Name" value="${esc(S.q)}" autocomplete="off">` +
     `<div class="pills" style="margin-top:10px"><button class="pill" data-filter="" aria-pressed="${!S.filter}">All ${inBus.length}</button>` +
     filters.map(f => `<button class="pill" data-filter="${esc(f)}" aria-pressed="${K(S.filter) === K(f)}">${esc(f)} · ${count(f)}</button>`).join('') + '</div>' +
@@ -301,7 +316,7 @@ function vTrav() {
           ? `<span class="chip b">${esc(o)}${x.detail && x.detail[o] ? ' · ' + esc(x.detail[o]) : ''}</span>`
           : ex.some(e => K(e.extra) === K(o)) ? '' : `<span class="chip n">No ${esc(o)}</span>`).join('')}` +
         ex.map(e => `<span class="chip ${e.pending ? 'p' : 'x'}">${esc(e.extra)}${e.choice ? ' · ' + esc(e.choice) : ''}${e.day ? ' · ' + esc(Core.dayLabel(e.day)) : ''}</span>`).join('') +
-        '</div></div>';
+        depChip(x.id) + '</div></div>';
     }).join('') : '<div class="card muted" style="margin-top:10px">Nobody matches.</div>');
 }
 
@@ -353,11 +368,17 @@ function listDays() {
 }
 function vLists() {
   const L = S.L, lists = listsFor(L.date);
+  if (L.list === '__dep' && S.data.trip.deposit) return vDep();
   const cur = L.list && lists.find(z => z.label === L.list);
   if (cur) return L.edit ? vGroups(cur) : vList(cur);
   L.list = null;
   const days = listDays();
-  let h = '<div class="pills">' + days.map(d => `<button class="pill" data-ldate="${d}" aria-pressed="${L.date === d}">${esc(Core.dayLabel(d))}${d === Core.today() ? ' · today' : ''}</button>`).join('') + '</div>';
+  let h = '';
+  if (S.data.trip.deposit) {
+    const st = Core.depState(entries().filter(mine)), mt = myTravellers(), paid = mt.filter(x => st.per[x.id] && st.per[x.id].gave > 0).length;
+    h += `<button class="lrow" data-lopen="__dep" style="margin:0 0 10px"><div style="flex:1"><div class="nm">Deposits</div><div class="sub">${paid} of ${mt.length} paid · ${m(mt.reduce((a, x) => a + (st.per[x.id] ? st.per[x.id].gave : 0), 0))}${st.open ? ' · at ' + esc(st.open.name) : ''}</div><div class="bar"><i style="width:${mt.length ? Math.round(paid / mt.length * 100) : 0}%"></i></div></div><span class="go" aria-hidden="true">›</span></button>`;
+  }
+  h += '<div class="pills">' + days.map(d => `<button class="pill" data-ldate="${d}" aria-pressed="${L.date === d}">${esc(Core.dayLabel(d))}${d === Core.today() ? ' · today' : ''}</button>`).join('') + '</div>';
   const row = z => { const n = z.members.filter(m => markOf(z.label, m.x).p).length, gs = new Set(z.members.map(m => markOf(z.label, m.x).g).filter(Boolean)).size;
     return `<button class="lrow" data-lopen="${esc(z.label)}"><div style="flex:1"><div class="nm">${esc(z.label)}</div><div class="sub">${n} of ${z.members.length} checked${gs ? ' · ' + gs + ' group' + (gs > 1 ? 's' : '') : ''}</div><div class="bar"><i style="width:${Math.round(n / z.members.length * 100)}%"></i></div></div><span class="go" aria-hidden="true">›</span></button>`; };
   const bk = lists.filter(z => z.booked), sd = lists.filter(z => !z.booked);
@@ -406,6 +427,150 @@ function vGroups(z) {
     `<button class="btn" data-act="ledone">Done</button>`;
 }
 
+/* ---------- deposits ---------- */
+function myTravellers() {
+  const t = S.data.trip;
+  return S.data.travellers.filter(x => x.bus === String(S.data.session.bus) || t.buses.length < 2).sort((a, b) => a.name.localeCompare(b.name));
+}
+function depEntry(type, f) {
+  return Object.assign({ id: Core.uid(), created: nowIso(), type, currency: 'EUR', bus: S.data.session.bus, guide: S.data.session.guide, status: 'OK' }, f);
+}
+function vDep() {
+  const t = S.data.trip, D = S.D, st = Core.depState(entries().filter(mine)), mt = myTravellers();
+  if (D.form) return vDepForm(st);
+  const P = id => st.per[id] || { gave: 0, kept: 0, ret: null, inIds: [], keptWhy: [] };
+  let h = `<button class="back" data-lback="1">‹ All lists</button><h2 style="margin-top:0">Deposits</h2>` +
+    '<div class="busseg" role="group" aria-label="Step">' + ['1 · Collect', '2 · Hotels', '3 · Give back'].map((l, i) => `<button data-dstep="${i}" aria-pressed="${D.step === i}">${l}</button>`).join('') + '</div>';
+  if (D.step === 0) {
+    const paid = mt.filter(x => P(x.id).gave > 0), total = paid.reduce((a, x) => a + P(x.id).gave, 0);
+    const shown = D.miss ? mt.filter(x => !P(x.id).gave) : mt;
+    h += `<div class="counter"><div class="box in"><b>${m(total)}</b>${paid.length} of ${mt.length} paid</div><button class="box out" data-act="dmiss"><b>${mt.length - paid.length} missing</b>${D.miss ? 'show everyone' : 'tap to see who'}</button></div>` +
+      `<p class="muted" style="margin:4px 2px">Usual deposit: ${m(t.deposit)}. Tap what the person really gave.</p>` +
+      shown.map(x => { const p = P(x.id);
+        return `<div class="prow"><div class="nm">${esc(x.name)}</div>` + (p.gave ? `<button class="dep" data-dundo="${esc(x.id)}" aria-label="${esc(x.name)} gave ${m(p.gave)}, tap to undo">${m(p.gave)}</button>`
+          : `<div class="amts"><button data-dgive="${esc(x.id)}" data-amt="${t.deposit}">${m(t.deposit)}</button><button data-dgive="${esc(x.id)}" data-amt="${t.deposit * 2}">${m(t.deposit * 2)}</button><button data-dgive="${esc(x.id)}" data-amt="other">Other</button></div>`) + '</div>'; }).join('') +
+      (shown.length ? '<p class="note">Tap a paid amount to undo it.</p>' : '<div class="card muted" style="margin-top:8px">Everybody paid.</div>');
+  }
+  if (D.step === 1) {
+    h += `<div class="grid2"><div class="box in">In your pocket<b>${m(st.pocket)}</b></div><div class="box" style="background:#EFE6F7;color:#4B2A7A">At the hotel<b>${m(st.atHotel)}</b>${st.open ? '<small>' + esc(st.open.name) + '</small>' : ''}</div></div>`;
+    if (st.hotels.length) h += '<div class="card" style="margin-top:10px">' + st.hotels.map(x => {
+      const diff = x.back ? (+x.back.eur || 0) - (+x.out.eur || 0) : 0;
+      return `<div class="hline"><div><b>${esc(Core.dayLabel(String(x.out.created).slice(0, 10)))} · ${esc(x.name)}</b><br><span class="muted">Given ${m(x.out.eur)} · ${x.back ? 'got back ' + m(x.back.eur) : 'not back yet'}</span></div>` +
+        (x.back ? (diff ? `<b style="color:var(--red)">−${m(-diff)}</b>` : '<span class="muted">✓</span>') : '<span class="muted">at hotel</span>') + '</div>'; }).join('') + '</div>';
+    const kept = entries().filter(mine).filter(e => e.type === 'DEP_KEPT' && e.status !== 'CANCELLED');
+    if (kept.length) h += '<div class="kept"><b>Kept by hotels</b>' + kept.map(e => `<br>${esc(e.traveller)} · ${m(e.eur)}${e.description ? ' · ' + esc(e.description) : ''}`).join('') + '</div>';
+    h += st.open ? `<button class="btn" data-act="dback">Got the deposits back from ${esc(st.open.name)}</button>`
+      : `<button class="btn" data-act="dhotel" ${st.pocket > 0 ? '' : 'disabled'}>Give deposits to a hotel</button>`;
+  }
+  if (D.step === 2) {
+    const rows = mt.filter(x => P(x.id).gave || P(x.id).kept);
+    const open = rows.filter(x => !P(x.id).ret), toGive = open.reduce((a, x) => a + Math.max(0, P(x.id).gave - P(x.id).kept), 0);
+    const owes = open.reduce((a, x) => a + Math.max(0, P(x.id).kept - P(x.id).gave), 0);
+    h += `<div class="counter"><div class="box in"><b>${rows.length - open.length} done</b>of ${rows.length}</div><div class="box out"><b>${m(toGive)} to give</b>${open.length} ${open.length === 1 ? 'person' : 'people'} left${owes ? ' · ' + m(owes) + ' owed to you' : ''}</div></div>`;
+    if (st.open) h += `<div class="kept">The deposits are still at ${esc(st.open.name)}. Get them back first (step 2).</div>`;
+    h += rows.map(x => { const p = P(x.id), due = Math.round((p.gave - p.kept) * 100) / 100;
+      const sub = 'gave ' + m(p.gave) + (p.kept ? ' · ' + m(p.kept) + ' kept' + (p.keptWhy.length ? ' (' + p.keptWhy.join(', ') + ')' : '') : '');
+      const act = p.ret ? `<div class="done">✓ ${+p.ret.eur < 0 ? 'Paid ' + m(-p.ret.eur) : +p.ret.eur ? 'Given back' : 'Done'}<br><button class="link" data-dunret="${esc(x.id)}">Undo</button></div>`
+        : `<button class="okb ${due < 0 ? 'owe' : ''}" data-dret="${esc(x.id)}">${due > 0 ? 'Give ' + m(due) : due < 0 ? 'Owes ' + m(-due) : 'Nothing to give'}</button>`;
+      return `<div class="prow"><div><div class="nm">${esc(x.name)}</div><span class="muted" style="font-size:13px">${esc(sub)}</span></div>${act}</div>`; }).join('');
+    if (!rows.length) h += '<div class="card muted">No deposits collected yet.</div>';
+  }
+  return h;
+}
+function vDepForm(st) {
+  const F = S.D.form;
+  if (F.kind === 'hotel') return `<button class="back" data-act="dclose">‹ Hotels</button><h2 style="margin-top:0">Give deposits to a hotel</h2><div class="card">` +
+    `<label class="lbl" for="dName" style="margin-top:0">Hotel</label><input id="dName" type="text" value="${esc(F.name)}" placeholder="Hotel name">` +
+    `<label class="lbl" for="dAmt">Amount given</label><input id="dAmt" inputmode="decimal" value="${esc(F.amount)}" style="font-size:22px;font-weight:700">` +
+    `<div class="muted" style="margin:6px 2px 0">You have ${m(st.pocket)} of deposits.</div><div class="err" id="dErr"></div><button class="btn" data-act="dsave">Save</button></div>`;
+  const given = +st.open.out.eur || 0, back = parseFloat(String(F.amount).replace(',', '.')), kept = isNaN(back) ? 0 : Math.round((given - back) * 100) / 100;
+  let h = `<button class="back" data-act="dclose">‹ Hotels</button><h2 style="margin-top:0">Got back from ${esc(st.open.name)}</h2><div class="card">` +
+    `<label class="lbl" for="dAmt" style="margin-top:0">Amount you got back</label><input id="dAmt" inputmode="decimal" value="${esc(F.amount)}" style="font-size:22px;font-weight:700">` +
+    `<div class="muted" style="margin:6px 2px 0">You gave ${m(given)}.</div>`;
+  if (kept > 0) {
+    const sum = F.kept.reduce((a, k) => a + (parseFloat(String(k.amt).replace(',', '.')) || 0), 0);
+    h += `<div class="kept">The hotel kept <b>${m(kept)}</b>. Who is it for?${F.kept.length ? ' Split so far: ' + m(sum) : ''}</div>` +
+      `<label class="lbl" for="dWhy">Reason</label><input id="dWhy" type="text" value="${esc(F.why)}" placeholder="e.g. Broken lamp, room 12">` +
+      '<span class="lbl">Charged to</span>' + F.kept.map((k, i) => { const x = S.data.travellers.find(z => String(z.id) === String(k.tid));
+        return `<div class="prow" style="background:var(--paper)"><div class="nm">${esc(x ? x.name : k.tid)}</div><div class="amts"><input data-kamt="${i}" inputmode="decimal" value="${esc(k.amt)}" style="width:80px;padding:8px"><button data-kdel="${i}" aria-label="Remove">✕</button></div></div>`; }).join('');
+    const q = F.q.trim().toLowerCase(), res = q.length >= 2 ? myTravellers().filter(z => z.name.toLowerCase().indexOf(q) >= 0 && !F.kept.some(k => String(k.tid) === String(z.id))).slice(0, 5) : [];
+    h += `<input id="dQ" type="search" placeholder="+ Add a person (type a name)" value="${esc(F.q)}" autocomplete="off" style="margin-top:8px">` +
+      (res.length ? '<div class="results">' + res.map(z => `<button data-kadd="${esc(z.id)}">${esc(z.name)}</button>`).join('') + '</div>' : '');
+  } else if (kept < 0) h += '<div class="err">That is more than you gave.</div>';
+  return h + '<div class="err" id="dErr"></div><button class="btn" data-act="dsave">Save</button></div>';
+}
+function keepDep() {
+  const F = S.D.form; if (!F) return;
+  if ($('dName')) F.name = $('dName').value;
+  if ($('dAmt')) F.amount = $('dAmt').value;
+  if ($('dWhy')) F.why = $('dWhy').value;
+  document.querySelectorAll('[data-kamt]').forEach(i => { F.kept[+i.dataset.kamt].amt = i.value; });
+}
+function saveDep() {
+  keepDep();
+  const F = S.D.form, st = Core.depState(entries().filter(mine)), num = v => Math.round(parseFloat(String(v).replace(',', '.')) * 100) / 100;
+  const err = t => { $('dErr').textContent = t; };
+  if (F.kind === 'hotel') {
+    const a = num(F.amount);
+    if (!F.name.trim()) return err('Add the hotel name.');
+    if (!(a > 0)) return err('Enter the amount.');
+    S.queue.push({ op: 'add', entry: depEntry('DEP_HOTEL', { description: F.name.trim(), party: F.name.trim(), amount: a, eur: a }) });
+  } else {
+    const given = +st.open.out.eur || 0, back = num(F.amount);
+    if (isNaN(back) || back < 0) return err('Enter the amount you got back (0 if nothing).');
+    if (back > given) return err('That is more than you gave.');
+    const kept = Math.round((given - back) * 100) / 100;
+    const ks = F.kept.map(k => ({ tid: k.tid, amt: num(k.amt) })).filter(k => k.amt > 0);
+    if (kept > 0) {
+      if (!F.why.trim()) return err('Add the reason.');
+      if (!ks.length) return err('Add who the money is for.');
+      if (Math.abs(ks.reduce((a, k) => a + k.amt, 0) - kept) > 0.009) return err('The amounts must add up to ' + m(kept) + '.');
+    }
+    const now = nowIso();
+    S.queue.push({ op: 'add', entry: depEntry('DEP_BACK', { created: now, description: st.open.name, party: st.open.name, amount: back, eur: back }) });
+    if (kept > 0) ks.forEach(k => { const x = S.data.travellers.find(z => String(z.id) === String(k.tid));
+      S.queue.push({ op: 'add', entry: depEntry('DEP_KEPT', { created: now, travellerId: k.tid, traveller: x ? x.name : '', description: F.why.trim(), party: st.open.name, amount: k.amt, eur: k.amt }) }); });
+  }
+  S.D.form = null; saveQueue(); sync(); toast('Saved'); render(); window.scrollTo(0, 0);
+}
+function depClick(d) {
+  const st = Core.depState(entries().filter(mine)), x = id => S.data.travellers.find(z => String(z.id) === String(id));
+  if (d.dstep !== undefined) { S.D.step = +d.dstep; S.D.form = null; render(); return true; }
+  if (d.dgive) {
+    let a = d.amt;
+    if (a === 'other') { a = prompt('Amount given by ' + x(d.dgive).name + ' (€)'); if (a == null) return true; }
+    a = Math.round(parseFloat(String(a).replace(',', '.')) * 100) / 100;
+    if (!(a > 0)) { toast('Enter an amount'); return true; }
+    queueAdd(depEntry('DEP_IN', { travellerId: d.dgive, traveller: x(d.dgive).name, amount: a, eur: a }));
+    toast(x(d.dgive).name + ' · ' + m(a)); return true;
+  }
+  if (d.dundo) {
+    const p = st.per[d.dundo];
+    if (p && p.ret) { toast('Already given back'); return true; }
+    if (p && confirm('Undo the deposit of ' + m(p.gave) + ' for ' + x(d.dundo).name + '?')) p.inIds.forEach(queueCancel);
+    return true;
+  }
+  if (d.dret) {
+    if (st.open && !confirm('The deposits are still at ' + st.open.name + '. Continue anyway?')) return true;
+    const p = st.per[d.dret], due = Math.round((p.gave - p.kept) * 100) / 100, n = x(d.dret).name;
+    const msg = due > 0 ? 'Give ' + m(due) + ' back to ' + n + '?' : due < 0 ? 'Did ' + n + ' pay you the ' + m(-due) + ' missing?' : 'Nothing to give back to ' + n + '. Mark as done?';
+    if (confirm(msg)) queueAdd(depEntry('DEP_RET', { travellerId: d.dret, traveller: n, amount: due, eur: due }));
+    return true;
+  }
+  if (d.dunret) { const p = st.per[d.dunret]; if (p && p.ret && confirm('Undo?')) queueCancel(p.ret.id); return true; }
+  if (d.kadd) { keepDep(); const F = S.D.form, given = +st.open.out.eur || 0, kept = given - (parseFloat(String(F.amount).replace(',', '.')) || 0);
+    const left = Math.round((kept - F.kept.reduce((a, k) => a + (parseFloat(String(k.amt).replace(',', '.')) || 0), 0)) * 100) / 100;
+    F.kept.push({ tid: d.kadd, amt: left > 0 ? String(left) : '' }); F.q = ''; render(); return true; }
+  if (d.kdel !== undefined) { keepDep(); S.D.form.kept.splice(+d.kdel, 1); render(); return true; }
+  const a = d.act;
+  if (a === 'dmiss') { S.D.miss = !S.D.miss; render(); return true; }
+  if (a === 'dhotel') { S.D.form = { kind: 'hotel', name: '', amount: String(Math.round(st.pocket * 100) / 100) }; render(); window.scrollTo(0, 0); return true; }
+  if (a === 'dback') { S.D.form = { kind: 'back', amount: String(+st.open.out.eur || 0), why: '', kept: [], q: '' }; render(); window.scrollTo(0, 0); return true; }
+  if (a === 'dclose') { S.D.form = null; render(); return true; }
+  if (a === 'dsave') { saveDep(); return true; }
+  return false;
+}
+
 function vAdd() {
   const t = S.data.trip, A = S.add;
   if (!t.extras.length) return '<div class="card">No extras set for this trip. The office adds them in the EXTRAS tab.</div>';
@@ -444,7 +609,9 @@ function vCash() {
   const c = Core.cash(all);
   if (S.money) return vMoney();
   const cur = Object.keys(c.byCur).filter(k => Math.abs(c.byCur[k]) > 0.001);
+  const dst = Core.depState(all);
   let h = `<div class="card"><div class="muted">Should be in your pocket</div><div class="big">${m(c.balance)}</div>` +
+    (Math.abs(c.deposits) > 0.001 || dst.atHotel ? `<div class="muted">of which <b>${m(c.deposits)}</b> deposits${dst.atHotel ? ' · ' + m(dst.atHotel) + ' more at ' + esc(dst.open.name) : ''}</div>` : '') +
     (cur.length > 1 || (cur[0] && cur[0] !== 'EUR') ? `<div class="muted">Counted by currency: ${cur.map(k => (Math.round(c.byCur[k] * 100) / 100).toLocaleString('en-GB') + ' ' + (k === 'EUR' ? '€' : esc(k))).join(' + ')}</div>` : '') +
     `<div class="grid2" style="margin-top:12px"><div class="box in">Money in<b>+${m(c.sales + c.in)}</b><small>Extras ${m(c.sales)} · Other ${m(c.in)}</small></div>` +
     `<div class="box out">Money out<b>−${m(c.out)}</b></div></div>` +
@@ -457,12 +624,15 @@ function vCash() {
     const d = String(e.created).slice(0, 10);
     if (d !== day) { day = d; h += `<div style="font:700 15px var(--display);margin:10px 0 2px">${esc(Core.dayLabel(d))}</div>`; }
     const cx = e.status === 'CANCELLED';
-    const title = e.type === 'SALE' ? e.extra + (e.choice ? ' · ' + e.choice : '') + ' – ' + e.traveller : (e.description || (e.type === 'IN' ? 'Money in' : 'Money out')) + (e.party ? ' – ' + e.party : '');
-    const sign = e.type === 'OUT' ? '−' : '+';
+    const dep = Core.isDeposit(e);
+    const title = e.type === 'SALE' ? e.extra + (e.choice ? ' · ' + e.choice : '') + ' – ' + e.traveller
+      : dep ? Core.typeLabel(e) + ' – ' + (e.traveller || e.description) + (e.type === 'DEP_KEPT' && e.description ? ' (' + e.description + ')' : '')
+      : (e.description || (e.type === 'IN' ? 'Money in' : 'Money out')) + (e.party ? ' – ' + e.party : '');
+    const eff = Core.effect(e), sign = e.type === 'DEP_KEPT' ? '' : eff < 0 ? '−' : '+';
     const orig = e.currency && e.currency !== 'EUR' ? ' · ' + e.amount + ' ' + e.currency : '';
-    h += `<div class="entry ${cx ? 'cx' : ''}"><div><div class="t">${esc(title)}</div><small>${esc(String(e.created).slice(11, 16))} · ${e.type === 'SALE' ? 'Extra' : e.type === 'IN' ? 'In' : 'Out'}${esc(orig)}${e.pending ? ' · waiting to sync' : ''}${cx ? ' · cancelled' : ''}</small>` +
+    h += `<div class="entry ${cx ? 'cx' : ''}"><div><div class="t">${esc(title)}</div><small>${esc(String(e.created).slice(11, 16))} · ${esc(Core.typeLabel(e))}${esc(orig)}${e.pending ? ' · waiting to sync' : ''}${cx ? ' · cancelled' : ''}</small>` +
       (!cx ? `<button class="link" data-cancel="${esc(e.id)}">Cancel</button>` : '') + `</div>` +
-      `<div class="amt" style="color:${cx ? 'inherit' : e.type === 'OUT' ? 'var(--red)' : 'var(--gtext)'}">${sign}${m(e.eur)}</div></div>`;
+      `<div class="amt" style="color:${cx || !eff ? 'var(--muted)' : eff < 0 ? 'var(--red)' : 'var(--gtext)'}">${sign}${m(Math.abs(e.eur))}</div></div>`;
   });
   return h + '</div>';
 }
@@ -511,8 +681,9 @@ document.addEventListener('click', e => {
   if (d.mtype) { keepMoney(); S.money.type = d.mtype; render(); return; }
   if (d.mcur) { keepMoney(); S.money.cur = d.mcur; render(); return; }
   if (d.day !== undefined) { S.totDay = d.day; render(); return; }
+  if (S.tab === 'lists' && S.L.list === '__dep' && depClick(d)) return;
   if (d.ldate) { S.L.date = d.ldate; S.L.list = null; render(); return; }
-  if (d.lopen) { Object.assign(S.L, { list: d.lopen, grp: 0, miss: false, edit: false, ng: 2 }); render(); window.scrollTo(0, 0); return; }
+  if (d.lopen) { Object.assign(S.L, { list: d.lopen, grp: 0, miss: false, edit: false, ng: 2 }); S.D.form = null; S.D.miss = false; render(); window.scrollTo(0, 0); return; }
   if (d.lback) { S.L.list = null; render(); window.scrollTo(0, 0); return; }
   if (d.lgrp !== undefined) { S.L.grp = +d.lgrp; render(); return; }
   if (d.lmark || d.lset) {
@@ -548,6 +719,8 @@ document.addEventListener('input', e => {
   if (e.target.id === 'tq') { S.q = e.target.value; S.focusSearch = true; render(); }
   if (e.target.id === 'addQ') { S.add.q = e.target.value; S.add.focus = true; render(); }
   if (e.target.id === 'addDay') S.add.day = e.target.value;
+  if (e.target.id === 'dQ') { keepDep(); S.D.form.q = e.target.value; S.D.focus = true; render(); }
+  if (e.target.id === 'dAmt' && S.D.form && S.D.form.kind === 'back') { keepDep(); S.D.focus = 'dAmt'; render(); }
 });
 function keepMoney() { if (!$('mDesc')) return; S.money.desc = $('mDesc').value; S.money.party = $('mParty').value; S.money.amount = $('mAmt').value; }
 

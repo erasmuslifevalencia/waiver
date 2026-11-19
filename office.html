@@ -56,7 +56,7 @@
 </div>
 
 <script src="config.js?v=5"></script>
-<script src="app-core.js?v=2"></script>
+<script src="app-core.js?v=3"></script>
 <script>
 const $ = id => document.getElementById(id);
 let KEY = decodeURIComponent(location.hash.slice(1)), TRIPS = [], TRIP = null, D = null, F = { bus: '', type: '' };
@@ -102,15 +102,15 @@ function render() {
   h += '<h2>Extras sold · all days</h2><div class="grid">' + (ex.length ? ex.map(x => table(x.name + ' · ' + x.total, x.rows)).join('') : '<div class="card muted">No extras set for this trip.</div>') + '</div>';
   if (t.optionCols.length) h += '<h2>Booked options</h2><div class="grid">' + table('Options', Core.optionTotals(t, D.travellers)) + '</div>';
 
-  const list = all.filter(e => (!F.bus || String(e.bus) === F.bus) && (!F.type || e.type === F.type)).sort((a, b) => String(b.created).localeCompare(String(a.created)));
+  const list = all.filter(e => (!F.bus || String(e.bus) === F.bus) && (!F.type || (F.type === 'DEP' ? Core.isDeposit(e) : e.type === F.type))).sort((a, b) => String(b.created).localeCompare(String(a.created)));
   h += `<h2>All entries</h2><div class="tools">
     <select id="fbus" aria-label="Bus"><option value="">All buses</option>${buses.map(b => `<option value="${esc(b)}" ${F.bus === b ? 'selected' : ''}>Bus ${esc(b)}</option>`).join('')}</select>
-    <select id="ftype" aria-label="Type"><option value="">All types</option>${[['SALE', 'Extras'], ['IN', 'Money in'], ['OUT', 'Money out']].map(([v, l]) => `<option value="${v}" ${F.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <select id="ftype" aria-label="Type"><option value="">All types</option>${[['SALE', 'Extras'], ['IN', 'Money in'], ['OUT', 'Money out'], ['DEP', 'Deposits']].map(([v, l]) => `<option value="${v}" ${F.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
     <button class="btn" id="csv">Download CSV</button><button class="btn" id="reload">Refresh</button></div>
     <div class="card scroll"><table><thead><tr><th>When</th><th>Bus</th><th>Guide</th><th>Type</th><th>Traveller / description</th><th>Extra</th><th class="n">Amount</th><th class="n">€</th><th>Status</th></tr></thead><tbody>` +
-    (list.length ? list.map(e => `<tr class="${e.status === 'CANCELLED' ? 'cx' : ''}"><td>${esc(String(e.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(e.bus)}</td><td>${esc(e.guide)}</td><td>${e.type === 'SALE' ? 'Extra' : e.type === 'IN' ? 'In' : 'Out'}</td>
-      <td>${esc(e.type === 'SALE' ? e.traveller : e.description + (e.party ? ' – ' + e.party : ''))}</td><td>${esc(e.extra ? e.extra + (e.choice ? ' · ' + e.choice : '') + (e.day ? ' · ' + Core.dayLabel(e.day) : '') : '')}</td>
-      <td class="n">${e.type === 'OUT' ? '−' : '+'}${esc(e.amount)} ${esc(e.currency === 'EUR' ? '€' : e.currency)}</td><td class="n">${e.type === 'OUT' ? '−' : '+'}${m(e.eur)}</td><td>${e.status === 'CANCELLED' ? 'Cancelled ' + esc(e.cancelled) : 'OK'}</td></tr>`).join('')
+    (list.length ? list.map(e => `<tr class="${e.status === 'CANCELLED' ? 'cx' : ''}"><td>${esc(String(e.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(e.bus)}</td><td>${esc(e.guide)}</td><td>${esc(Core.typeLabel(e))}</td>
+      <td>${esc(e.type === 'SALE' || /^DEP_(IN|RET)$/.test(e.type) ? e.traveller : (e.traveller ? e.traveller + ' · ' : '') + e.description + (e.party && e.party !== e.description ? ' – ' + e.party : ''))}</td><td>${esc(e.extra ? e.extra + (e.choice ? ' · ' + e.choice : '') + (e.day ? ' · ' + Core.dayLabel(e.day) : '') : '')}</td>
+      <td class="n">${Core.effect(e) < 0 ? '−' : Core.effect(e) ? '+' : ''}${esc(Math.abs(e.amount))} ${esc(e.currency === 'EUR' ? '€' : e.currency)}</td><td class="n">${Core.effect(e) < 0 ? '−' : Core.effect(e) ? '+' : ''}${m(Math.abs(e.eur))}</td><td>${e.status === 'CANCELLED' ? 'Cancelled ' + esc(e.cancelled) : 'OK'}</td></tr>`).join('')
       : '<tr><td colspan="9" class="muted">No entries yet.</td></tr>') + '</tbody></table></div>';
   $('main').innerHTML = h;
   $('fbus').onchange = ev => { F.bus = ev.target.value; render(); };

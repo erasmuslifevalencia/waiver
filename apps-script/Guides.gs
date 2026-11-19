@@ -12,7 +12,7 @@
 const G = {
   PROP_SHEET: 'GUIDES_SHEET_ID',
   TRIPS: 'TRIPS', BUSES: 'BUSES', EXTRAS: 'EXTRAS', CASH: 'CASH', ATTEND: 'ATTEND',
-  TRIPS_HDR: ['Trip ID', 'Name', 'Dates', 'Options sheet ID', 'Options tab', 'Header row', 'Option columns (comma separated)', 'Active (yes/no)', 'Local currency', 'Local currency per 1 €'],
+  TRIPS_HDR: ['Trip ID', 'Name', 'Dates', 'Options sheet ID', 'Options tab', 'Header row', 'Option columns (comma separated)', 'Active (yes/no)', 'Local currency', 'Local currency per 1 €', 'Deposit € (empty = no deposit)'],
   BUSES_HDR: ['Trip ID', 'Bus', 'Colour', 'Guide', 'PIN (4–6 digits)'],
   EXTRAS_HDR: ['Trip ID', 'Extra', 'Price €', 'Choices (comma separated, own price with ":", e.g. Single:40, Double:60)', 'Ask for a day (yes/no)'],
   ATTEND_HDR: ['Trip ID', 'Bus', 'Date', 'List', 'Traveller ID', 'Traveller', 'Present', 'Group', 'Updated', 'By'],
@@ -108,7 +108,7 @@ function gTrips_() {
   return gRows_(G.TRIPS).map(r => ({
     id: r[0].trim(), name: r[1].trim(), dates: r[2].trim(), sheetId: r[3].trim(), tab: r[4].trim(),
     headerRow: parseInt(r[5], 10) || 1, optionDefs: optionDefs_(r[6]), active: yes_(r[7]),
-    localCur: r[8].trim(), rate: num_(r[9]),
+    localCur: r[8].trim(), rate: num_(r[9]), deposit: num_(r[10]),
   }));
 }
 
@@ -217,7 +217,7 @@ function gData_(s) {
     ok: true,
     session: s,
     trip: { id: t.id, name: t.name, dates: t.dates, buses: t.buses, extras: t.extras, optionCols: t.optionCols,
-      localCur: t.localCur, rate: t.rate },
+      localCur: t.localCur, rate: t.rate, deposit: t.deposit },
     travellers: gTravellers_(t),
     entries: gEntries_(t.id),
     attend: gAttend_(t.id, s.bus),
@@ -263,6 +263,14 @@ function gEntryRow_(e, s, t) {
     const price = choice && x.prices && x.prices[choice] != null ? x.prices[choice] : x.price;
     return [e.id, created, t.id, s.bus, s.guide, 'SALE', clean(e.travellerId), clean(e.traveller), x.name, choice,
       x.askDay ? clean(e.day) : '', '', '', price, 'EUR', price, 'OK', ''];
+  }
+  if (/^DEP_(IN|RET|HOTEL|BACK|KEPT)$/.test(e.type)) {
+    const v = Math.round(num_(e.amount) * 100) / 100;
+    const perPerson = /^DEP_(IN|RET|KEPT)$/.test(e.type);
+    if (perPerson && !e.travellerId) return null;
+    if (e.type !== 'DEP_RET' && (v < 0 || (v === 0 && e.type !== 'DEP_BACK'))) return null;
+    return [e.id, created, t.id, s.bus, s.guide, e.type, perPerson ? clean(e.travellerId) : '', perPerson ? clean(e.traveller) : '', '', '', '',
+      clean(e.description), clean(e.party), v, 'EUR', v, 'OK', ''];
   }
   if (e.type === 'IN' || e.type === 'OUT') {
     const amount = Math.abs(num_(e.amount));

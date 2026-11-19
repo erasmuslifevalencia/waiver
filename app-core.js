@@ -35,18 +35,54 @@
     return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   };
 
-  /** Cash summary for a set of entries (status OK only). */
+  /** Cash effect of one entry in € (deposit lines included; DEP_KEPT is only a note: the hotel already kept that money). */
+  C.effect = function (e) {
+    const v = +e.eur || 0;
+    switch (e.type) {
+      case 'SALE': case 'IN': case 'DEP_IN': case 'DEP_BACK': return v;
+      case 'OUT': case 'DEP_HOTEL': case 'DEP_RET': return -v;
+      default: return 0;
+    }
+  };
+  C.typeLabel = function (e) {
+    return { SALE: 'Extra', IN: 'In', OUT: 'Out', DEP_IN: 'Deposit in', DEP_RET: 'Deposit back', DEP_HOTEL: 'Deposits to hotel',
+      DEP_BACK: 'Deposits from hotel', DEP_KEPT: 'Kept by hotel' }[e.type] || e.type;
+  };
+  C.isDeposit = function (e) { return /^DEP_/.test(e.type); };
+
+  /** Cash summary for a set of entries (cancelled ones ignored). Deposits are kept apart from sales and money in/out. */
   C.cash = function (entries) {
     const ok = entries.filter(e => e.status !== 'CANCELLED');
     const sum = f => ok.filter(f).reduce((a, e) => a + (+e.eur || 0), 0);
     const byCur = {};
     ok.forEach(e => {
-      const cur = e.currency || 'EUR';
-      const sign = e.type === 'OUT' ? -1 : 1;
-      byCur[cur] = (byCur[cur] || 0) + sign * (+e.amount || 0);
+      const cur = e.currency || 'EUR', eff = C.effect(e);
+      if (!eff) return;
+      byCur[cur] = (byCur[cur] || 0) + (eff < 0 ? -1 : 1) * Math.abs(+e.amount || 0);
     });
     const sales = sum(e => e.type === 'SALE'), inn = sum(e => e.type === 'IN'), out = sum(e => e.type === 'OUT');
-    return { sales: sales, in: inn, out: out, balance: sales + inn - out, byCur: byCur };
+    const dep = ok.filter(C.isDeposit).reduce((a, e) => a + C.effect(e), 0);
+    return { sales: sales, in: inn, out: out, deposits: dep, balance: sales + inn - out + dep, byCur: byCur };
+  };
+
+  /** Deposit state per traveller and hotel handovers, from one bus's entries. */
+  C.depState = function (entries) {
+    const ok = entries.filter(e => e.status !== 'CANCELLED' && C.isDeposit(e))
+      .sort((a, b) => String(a.created).localeCompare(String(b.created)));
+    const per = {}, hotels = [];
+    const P = id => (per[id] = per[id] || { gave: 0, kept: 0, ret: null, inIds: [], keptWhy: [] });
+    ok.forEach(e => {
+      if (e.type === 'DEP_IN') { const p = P(e.travellerId); p.gave += +e.eur || 0; p.inIds.push(e.id); }
+      if (e.type === 'DEP_KEPT') { const p = P(e.travellerId); p.kept += +e.eur || 0; if (e.description) p.keptWhy.push(e.description); }
+      if (e.type === 'DEP_RET') { P(e.travellerId).ret = e; }
+      if (e.type === 'DEP_HOTEL') hotels.push({ name: e.description, out: e, back: null, kept: 0 });
+      if (e.type === 'DEP_BACK') { const h = hotels.slice().reverse().find(x => !x.back); if (h) h.back = e; }
+    });
+    ok.filter(e => e.type === 'DEP_KEPT').forEach(e => { const h = hotels.slice().reverse().find(x => x.back && x.back.created <= e.created); if (h) h.kept += +e.eur || 0; });
+    const open = hotels.slice().reverse().find(h => !h.back) || null;
+    const pocket = ok.reduce((a, e) => a + C.effect(e), 0);
+    const atHotel = open ? +open.out.eur || 0 : 0;
+    return { per: per, hotels: hotels, open: open, pocket: pocket, atHotel: atHotel };
   };
 
   /** Counts per extra / choice / bus (sales OK), optionally for one day. */
