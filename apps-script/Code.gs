@@ -223,10 +223,13 @@ function apiSubmit(token, form) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    if (getSignedMap_()[sess.enr]) return { ok: false, error: 'already' };
     const p = getParticipants_(true).find(x => x.enr === sess.enr);
     if (!p) return { ok: false, error: 'notfound' };
     const version = p.insurances.length ? 'CON' : 'SIN';
+    const prev = getSignedMap_()[sess.enr];
+    if (prev && prev.version === version) return { ok: false, error: 'already' };
+    // Insurance changed since the first signature: the old waiver is kept but marked REPLACED.
+    if (prev) markReplaced_(sess.enr);
     const now = new Date();
     const pdf = buildPdf_(p, version, form, now);
     const file = getFolder_().createFile(pdf);
@@ -465,6 +468,14 @@ function getLogSheet_() {
 }
 
 /** enr → {version, at, pdf, verified} for VALID signatures */
+/** Marks the VALID waiver row(s) of a participant as REPLACED (a new version is about to be signed). */
+function markReplaced_(enr) {
+  const sh = getLogSheet_(), data = sh.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][1]) === String(enr) && data[i][11] === 'VALID') sh.getRange(i + 1, 12).setValue('REPLACED');
+  }
+}
+
 function getSignedMap_() {
   const data = getLogSheet_().getDataRange().getValues();
   const map = {};
