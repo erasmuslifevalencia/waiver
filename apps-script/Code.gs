@@ -39,7 +39,7 @@ const CONFIG = {
   INSURANCE_DEADLINE: '2026-11-26',
 
   // Waiver signing switch. While false, people can still check their trip.
-  SIGNING_OPEN: false,
+  SIGNING_OPEN: true,
   SIGNING_OPENS_ES: '27 de noviembre',
   SIGNING_OPENS_EN: '27 November',
 
