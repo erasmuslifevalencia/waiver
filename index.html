@@ -212,6 +212,7 @@
     <button class="btn" id="dl5" data-t="dlBtn"></button>
     <p class="help" data-t="dlHelp"></p>
     <div class="err" id="e5"></div>
+    <div id="ins5"></div>
     <button class="btn ghost" id="back5" data-t="backTrip"></button>
   </section>
 </main>
@@ -247,6 +248,7 @@ const T = {
     signBtn: 'Sign the waiver', backTrip: 'Back to my trip',
     doneTitle: 'Waiver signed', doneLead: 'Thank you. See you on board!',
     dlBtn: 'Download my waiver (PDF)', dlWait: 'Preparing your PDF…', dlHelp: 'Keep a copy on your phone. You can download it again later with your passport number.',
+    insBtn: 'Download my insurance summary (PDF)', insHelp: 'Emergency phone numbers, what to do and what is covered. Save it on your phone.',
     err: {
       blocked: 'Too many attempts. Try again in 15 minutes or ask the staff.',
       passport: 'This passport number doesn’t match our records.',
@@ -286,6 +288,7 @@ const T = {
     signBtn: 'Firmar el descargo', backTrip: 'Volver a mi viaje',
     doneTitle: 'Descargo firmado', doneLead: 'Gracias. ¡Nos vemos en el bus!',
     dlBtn: 'Descargar mi descargo (PDF)', dlWait: 'Preparando tu PDF…', dlHelp: 'Guarda una copia en tu móvil. Puedes volver a descargarlo más tarde con tu número de pasaporte.',
+    insBtn: 'Descargar el resumen de mi seguro (PDF)', insHelp: 'Teléfonos de urgencia, qué hacer y qué cubre. Guárdalo en tu móvil.',
     err: {
       blocked: 'Demasiados intentos. Vuelve a probar en 15 minutos o pregunta al staff.',
       passport: 'Este número de pasaporte no coincide con nuestros datos.',
@@ -407,12 +410,22 @@ function renderTrip() {
     $('helpRow').hidden = false;
   }
   let w;
-  if (s.signedAt && !s.needsResign) w = t('wSigned')(esc(s.signedAt)) + `<button class="btn ghost" id="dl3">${esc(t('dlBtn'))}</button><div class="err" id="e3dl"></div>`;
+  if (s.signedAt && !s.needsResign) w = t('wSigned')(esc(s.signedAt)) + `<button class="btn ghost" id="dl3">${esc(t('dlBtn'))}</button><div class="err" id="e3dl"></div>` + insuranceLinks();
   else if (!s.open) w = t('wClosed')(L === 'es' ? esc(CFG.opensEs || '') : esc(CFG.opensEn || ''));
   else w = (s.needsResign ? t('wResign') : t('wTodo')) + `<button class="btn" id="goSign">${esc(t('signNow'))}</button>`;
   $('wState').innerHTML = w;
+  $('ins5').innerHTML = insuranceLinks();
   const g = $('goSign'); if (g) g.onclick = openSign;
   const d = $('dl3'); if (d) d.onclick = () => downloadWaiver(d, 'e3dl');
+}
+
+/* insurance summary (no personal data) – shown once the waiver is signed */
+const INS_PDF = { Basic: 'insurance-basic.pdf', Student: 'insurance-student.pdf' };
+function insuranceLinks() {
+  const files = (DATA.trip.insurances || []).map(i => INS_PDF[i]).filter(Boolean);
+  if (!files.length) return '';
+  return files.map(f => `<a class="btn ghost" href="${f}?v=1" target="_blank" rel="noopener" download>${esc(t('insBtn'))}</a>`).join('')
+    + `<p class="help">${esc(t('insHelp'))}</p>`;
 }
 
 /* the participant's copy of the signed PDF */
